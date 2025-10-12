@@ -1,65 +1,3 @@
-<template>
-
-  <div class="news-container">
-    <!-- Loading -->
-    <p v-if="loading" class="text-center text-gray-500 mt-4">Loading news...</p>
-
-    <!-- Error -->
-    <p v-else-if="error" class="text-center text-red-500 mt-4">{{ error }}</p>
-
-    <!-- Empty -->
-    <p
-      v-else-if="filteredNews.length === 0"
-      class="text-center text-gray-500 mt-4"
-    >
-      No news found.
-    </p>
-
-    <!-- News Grid -->
-    <div v-else class="news-grid">
-      <div v-for="item in paginatedNews" :key="item.id" class="news-card">
-        <div class="news-header">
-          <h2 class="news-title">{{ item.title }}</h2>
-          <span
-            class="news-status"
-            :class="{
-              verified: item.stats === 'Verified',
-              fake: item.stats === 'Fake News',
-              review:
-                item.stats === 'Under Review' || item.stats === 'Unverified',
-            }"
-          >
-            {{ item.stats }}
-          </span>
-        </div>
-
-        <p class="news-description">{{ item.description }}</p>
-        <p class="news-meta">By {{ item.author }} • {{ item.date }}</p>
-
-        <div class="news-footer">
-          <div class="news-stats">
-            <span class="stat like">
-              <img :src="LikeIcon" alt="Like" class="icon" /> {{ item.upVotes }}
-            </span>
-            <span class="stat dislike">
-              <img :src="DislikeIcon" alt="Dislike" class="icon" />
-              {{ item.downVotes }}
-            </span>
-            <span class="stat comment">
-              <img :src="CommentIcon" alt="Comment" class="icon" />
-              {{ item.comments }}
-            </span>
-          </div>
-
-          <button class="view-btn" @click="goToDetail(item.id)">
-            View Details
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from "vue";
 import { useRouter } from "vue-router";
@@ -74,8 +12,6 @@ function goToDetail(id: number) {
   router.push({ name: "NewsDetail", params: { id } });
 }
 
-
-// Props
 interface Props {
   filterIndex: number | null;
   itemsPerPage: number;
@@ -94,7 +30,6 @@ interface Props {
 }
 const props = defineProps<Props>();
 
-// Types
 interface NewsItem {
   id: number;
   title: string;
@@ -107,13 +42,11 @@ interface NewsItem {
   comments: number;
 }
 
-// State
 const newsList = ref<NewsItem[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const visibleItems = ref(props.itemsPerPage);
 
-// Fetch data
 onMounted(async () => {
   try {
     const res = await fetch("http://localhost:5175/api/news");
@@ -133,7 +66,6 @@ onMounted(async () => {
   }
 });
 
-// Filtered news
 const filteredNews = computed(() => {
   if (props.filterIndex === 0 || props.filterIndex === null)
     return newsList.value;
@@ -142,7 +74,6 @@ const filteredNews = computed(() => {
   return newsList.value.filter((n) => n.stats === status);
 });
 
-// Watch for prop changes
 watch(
   () => props.itemsPerPage,
   (newVal) => {
@@ -157,170 +88,89 @@ watch(
   }
 );
 
-// Paginated news
 const paginatedNews = computed(() =>
   filteredNews.value.slice(0, visibleItems.value)
 );
 </script>
 
-<style scoped>
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap");
+<template>
+  <div
+    class="relative w-[125%] -left-[12.5%] font-[Outfit] py-4 px-8 box-border"
+  >
+    <p v-if="loading" class="text-center text-gray-500 mt-4">Loading news...</p>
+    <p v-else-if="error" class="text-center text-red-500 mt-4">{{ error }}</p>
 
-.news-container {
-  width: 125%;
-  position: relative;
-  left: -12.5%;
-  font-family: "Outfit", sans-serif;
-  padding: 1rem 2rem;
-  box-sizing: border-box;
-}
+    <p
+      v-else-if="filteredNews.length === 0"
+      class="text-center text-gray-500 mt-4"
+    >
+      No news found.
+    </p>
 
-.news-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  justify-content: center; /* ให้ grid อยู่กลาง container */
-}
+    <div
+      v-else
+      class="grid justify-center gap-6 grid-cols-3 md:grid-cols-3 sm:grid-cols-1"
+    >
+      <div
+        v-for="item in paginatedNews"
+        :key="item.id"
+        class="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col justify-between transition-all duration-300 ease-in-out leading-[1.3] hover:-translate-y-1 hover:shadow-lg group"
+      >
+        <div class="flex justify-between items-start text-left">
+          <h2
+            class="text-xl font-semibold m-0 text-gray-900 transition-colors duration-300 group-hover:text-blue-500 news-title"
+          >
+            {{ item.title }}
+          </h2>
+          <span
+            class="text-sm px-2 py-1 rounded-lg font-medium whitespace-nowrap text-right"
+            :class="{
+              'bg-green-100 text-green-800': item.stats === 'Verified',
+              'bg-red-100 text-red-700': item.stats === 'Fake News',
+              'bg-yellow-100 text-yellow-600':
+                item.stats === 'Under Review' || item.stats === 'Unverified',
+            }"
+          >
+            {{ item.stats }}
+          </span>
+        </div>
 
-@media (max-width: 1024px) {
-  .news-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-@media (max-width: 640px) {
-  .news-grid {
-    grid-template-columns: 1fr;
-  }
-}
+        <p
+          class="mt-4 mb-[0.1rem] text-gray-700 text-base text-left news-description"
+        >
+          {{ item.description }}
+        </p>
+        <p class="mt-4 mb-[0.1rem] text-gray-500 text-sm text-left news-meta">
+          By {{ item.author }} • {{ item.date }}
+        </p>
 
-.news-card {
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  transition: all 0.3s ease;
-  line-height: 1.3;
-}
+        <div class="mt-4 news-footer">
+          <div class="flex gap-4 mb-3 news-stats">
+            <span class="flex items-center gap-1 text-green-500">
+              <img :src="LikeIcon" alt="Like" class="w-5 h-5" />
+              {{ item.upVotes }}
+            </span>
 
-.news-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-}
+            <span class="flex items-center gap-1 text-red-600">
+              <img :src="DislikeIcon" alt="Dislike" class="w-5 h-5" />
+              {{ item.downVotes }}
+            </span>
 
-.news-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  text-align: left;
-}
+            <span class="flex items-center gap-1 text-gray-600">
+              <img :src="CommentIcon" alt="Comment" class="w-5 h-5" />
+              {{ item.comments }}
+            </span>
+          </div>
 
-.news-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin: 0;
-  color: #111827;
-  transition: color 0.3s ease;
-}
+          <button
+  class="w-full h-10 border border-gray-200 bg-gray-100 rounded-lg cursor-pointer transition-colors duration-300 ease-in-out hover:!bg-blue-600 hover:!text-white"
+  @click="goToDetail(item.id)"
+>
+  View Details
+</button>
 
-.news-card:hover .news-title {
-  color: #3b82f6;
-}
-
-.news-status {
-  font-size: 1rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 8px;
-  font-weight: 500;
-  white-space: nowrap;
-  text-align: right;
-}
-
-.news-status.verified {
-  background-color: #d1fae5;
-  color: #047857;
-}
-.news-status.fake {
-  background-color: #fee2e2;
-  color: #b91c1c;
-}
-.news-status.review {
-  background-color: #fef9c3;
-  color: #ca8a04;
-}
-
-.news-description {
-  margin-top: 15px;
-  color: #374151;
-  font-size: 1rem;
-  margin-bottom: 0.1rem;
-  text-align: left;
-}
-.news-meta {
-  color: #6b7280;
-  font-size: 0.875rem;
-  margin-bottom: 0.1rem;
-  text-align: left;
-  margin-top: 15px;
-}
-
-.news-footer {
-  margin-top: 1rem;
-}
-.news-stats {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-}
-.stat {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-.stat.like {
-  color: #16a34a;
-}
-.stat.dislike {
-  color: #dc2626;
-}
-.stat.comment {
-  color: #4b5563;
-}
-.icon {
-  width: 20px;
-  height: 20px;
-}
-
-.view-btn {
-  width: 100%;
-  height: 40px;
-  border: 1px solid #e5e7eb;
-  background-color: #f9fafb;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-.view-btn:hover {
-  background-color: #3c83f6;
-  color: white;
-}
-
-.load-more-btn {
-  width: 200px;
-  margin: 1rem auto;
-  display: block;
-  padding: 8px 16px;
-  border-radius: 8px;
-  background-color: #3b82f6;
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-size: 1rem;
-}
-.load-more-btn:hover {
-  background-color: #2563eb;
-}
-</style>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
