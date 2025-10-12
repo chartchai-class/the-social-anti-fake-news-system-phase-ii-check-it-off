@@ -7,7 +7,6 @@ import Footer from "../components/Footer.vue";
 const buttons = ["All News", "Verified", "Fake News", "Under Review"];
 const activeIndex = ref(0);
 const itemsPerPage = ref(6);
-
 const isLoading = ref(true);
 
 const allNews = ref(
@@ -35,49 +34,57 @@ const filteredNews = computed(() => {
   return allNews.value.filter((n) => n.category === filter);
 });
 
+const visibleItems = ref(itemsPerPage.value);
+
 const displayedNews = computed(() => {
-  return filteredNews.value.slice(0, itemsPerPage.value);
+  return filteredNews.value.slice(0, visibleItems.value);
 });
 
 watch(itemsPerPage, (newVal) => {
-  if (newVal % 6 !== 0) {
-    itemsPerPage.value = 6;
-  }
+  visibleItems.value = newVal;
 });
 
 function handleItemsChange() {
-  const current = itemsPerPage.value;
-  console.log(`User selected: ${current} items per page`);
+  console.log(`User selected: ${itemsPerPage.value} items per page`);
+}
+
+function loadMore() {
+  const nextVisible = visibleItems.value + itemsPerPage.value;
+  visibleItems.value = Math.min(nextVisible, filteredNews.value.length);
+  itemsPerPage.value = visibleItems.value;
 }
 </script>
 
 <template>
-  <div id="app" class="page-container">
-    <!-- Header -->
+  <div id="app" class="flex flex-col min-h-screen bg-white font-[Outfit]">
+    <router-link to="/add-news" class="bg-gray-500 font-[Outfit]">
+    </router-link>
+
     <Header />
 
-    <!-- Filter Bar -->
-    <div class="filter-bar">
-      <div class="button-group">
+    <div
+      class="w-[125%] flex justify-between items-center gap-6 px-8 py-4 rounded-xl flex-wrap mb-[-15px]"
+    >
+      <div class="flex flex-wrap gap-3">
         <button
           v-for="(btn, index) in buttons"
           :key="index"
-          :class="[
-            'btn',
-            activeIndex === index ? 'btn-active' : 'btn-inactive',
-          ]"
+          class="w-[150px] h-[40px] flex items-center justify-center text-base rounded-[10px] cursor-pointer border-none transition-colors duration-300 font-[Outfit]"
+          :style="{
+            backgroundColor: activeIndex === index ? '#3b82f6' : '#e5e7eb',
+            color: activeIndex === index ? 'white' : 'black',
+          }"
           @click="setActive(index)"
-          :disabled="activeIndex === index"
         >
           {{ btn }}
         </button>
       </div>
 
-      <div class="items-per-page">
+      <div class="flex items-center gap-2">
         <span>Items per page:</span>
         <select
           v-model.number="itemsPerPage"
-          class="select"
+          class="px-2 py-1 rounded-md border border-gray-300 text-base"
           @change="handleItemsChange"
         >
           <option v-for="n in [6, 12, 24]" :key="n" :value="n">{{ n }}</option>
@@ -85,119 +92,38 @@ function handleItemsChange() {
       </div>
     </div>
 
-    <!-- ✅ Section ข่าว -->
-    <div class="news-section">
-      <!-- Loading -->
-      <div v-if="isLoading" class="loader-container">
-        <div class="spinner"></div>
+    <div
+      class="flex flex-1 min-w-[1200px] min-h-[600px] items-center justify-center"
+    >
+      <div
+        v-if="isLoading"
+        class="flex flex-col items-center justify-center text-center text-[#555]"
+      >
+        <div
+          class="w-[60px] h-[60px] border-[6px] border-gray-200 border-t-[#2563eb] rounded-full animate-spin mb-4"
+        ></div>
         <p>Loading news...</p>
       </div>
 
-      <!-- แสดงข่าว -->
       <div v-else>
         <NewsList
           :filterIndex="activeIndex"
-          :itemsPerPage="itemsPerPage"
+          :itemsPerPage="visibleItems"
           :newsList="displayedNews"
         />
       </div>
     </div>
 
+    <div class="flex justify-center my-6">
+      <button
+        v-if="visibleItems < filteredNews.length"
+        @click="loadMore"
+        class="px-6 py-2 !bg-blue-500 !text-white rounded-md hover:!bg-blue-600 transition font-[Outfit]"
+      >
+        More News
+      </button>
+    </div>
+
     <Footer />
   </div>
 </template>
-
-<style scoped>
-.page-container {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  background: white;
-  font-family: "Outfit", sans-serif;
-}
-
-/* ให้ filter bar มีระยะห่างแน่นอน */
-.filter-bar {
-  width: 120%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 24px;
-  padding: 1rem 2rem;
-  border-radius: 12px;
-  flex-wrap: wrap;
-  margin-bottom: -15px;
-}
-
-/* ส่วนข่าว */
-.news-section {
-  flex: 1;
-  min-height: 600px; /* ✅ กันพื้นที่คงที่ไว้ ไม่ให้ Header ขยับ */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Loader */
-.loader-container {
-  text-align: center;
-  color: #555;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-.spinner {
-  border: 6px solid #e5e7eb;
-  border-top: 6px solid #2563eb;
-  border-radius: 50%;
-  width: 60px;
-  height: 60px;
-  animation: spin 1s linear infinite;
-  margin-bottom: 15px;
-}
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* ปุ่มกรอง */
-.button-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-.btn {
-  width: 150px;
-  height: 40px;
-  font-size: 1rem;
-  border-radius: 10px;
-  cursor: pointer;
-  border: none;
-  transition: background-color 0.3s;
-}
-.btn-active {
-  background-color: #2b7fff;
-  color: white;
-}
-.btn-inactive {
-  background-color: #f3f4f6;
-  color: black;
-}
-.btn:disabled {
-  cursor: default;
-  opacity: 0.8;
-}
-.items-per-page {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.select {
-  padding: 4px 8px;
-  border-radius: 6px;
-  border: 1px solid #d1d5db;
-  font-size: 1rem;
-}
-</style>

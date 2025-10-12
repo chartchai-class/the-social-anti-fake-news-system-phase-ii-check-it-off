@@ -8,5 +8,4 @@
 </template>
 
 <style>
-/* global layout style optional */
 </style>
