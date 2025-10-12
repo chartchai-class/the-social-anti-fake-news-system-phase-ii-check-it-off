@@ -51,22 +51,12 @@
             </span>
           </div>
 
-          <!-- ปุ่มนี้คือจุดสำคัญ -->
           <button class="view-btn" @click="goToDetail(item.id)">
             View Details
           </button>
         </div>
       </div>
     </div>
-
-    <!-- More Button -->
-    <button
-      v-if="visibleItems < filteredNews.length"
-      @click="loadMore"
-      class="load-more-btn"
-    >
-      More
-    </button>
   </div>
 </template>
 
@@ -167,14 +157,6 @@ watch(
   }
 );
 
-// Load more
-function loadMore() {
-  visibleItems.value = Math.min(
-    visibleItems.value + props.itemsPerPage,
-    filteredNews.value.length
-  );
-}
-
 // Paginated news
 const paginatedNews = computed(() =>
   filteredNews.value.slice(0, visibleItems.value)
@@ -271,6 +253,7 @@ const paginatedNews = computed(() =>
 }
 
 .news-description {
+  margin-top: 15px;
   color: #374151;
   font-size: 1rem;
   margin-bottom: 0.1rem;
@@ -281,6 +264,7 @@ const paginatedNews = computed(() =>
   font-size: 0.875rem;
   margin-bottom: 0.1rem;
   text-align: left;
+  margin-top: 15px;
 }
 
 .news-footer {
