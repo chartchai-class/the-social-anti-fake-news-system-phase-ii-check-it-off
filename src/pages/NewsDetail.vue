@@ -1,81 +1,3 @@
-<template>
-  <div class="PageContainer">
-    <div v-if="isLoading" class="LoadingScreen">
-      <div class="spinner"></div>
-      <p>Loading news...</p>
-    </div>
-
-    <div v-else>
-      <router-link to="/" class="BackButtonContainer">
-        <img src="@/assets/Card/Back.png" alt="Back Icon" class="BackIcon" />
-        Back to News List
-      </router-link>
-
-      <div class="NewsDetailContent">
-        <!-- Main Class -->
-        <h1 class="text-2xl font-bold mb-2">{{ news.title }}</h1>
-        <div class="NewsMeta">
-          <span
-            class="news-status"
-            :class="{
-              verified: news.stats === 'Verified',
-              fake: news.stats === 'Fake News',
-              review:
-                news.stats === 'Under Review' || news.stats === 'Unverified',
-            }"
-          >
-            {{ news.stats }}
-          </span>
-
-          <span class="AuthorContainer">
-            <img :src="AuthorIcon" alt="Author Icon" class="AuthorIcon" />
-            By {{ news.author || "Unknown" }}
-          </span>
-
-          <span class="DateContainer">
-            <img :src="DateIcon" alt="Date Icon" class="DateIcon" />
-            By {{ news.date || "Unknown" }}
-          </span>
-        </div>
-
-        <div class="FeedbackSection">
-          <span class="VotingSystem Like">
-            <img :src="LikeIcon" alt="Like" class="icon" /> {{ news.upVotes }}
-          </span>
-          <span class="VotingSystem Dislike">
-            <img :src="DisLikeIcon" alt="DisLike" class="icon" />
-            {{ news.downVotes }}
-          </span>
-          <span class="VotingSystem Comment">
-            <img :src="CommentIcon" alt="Comment" class="icon" />
-            {{ news.comments }} Comments
-          </span>
-        </div>
-
-        <div class="ImageOfNews" v-if="getImageById(news.id)">
-          <img
-            :src="getImageById(news.id)"
-            alt="News Image"
-            class="NewsMainImage"
-          />
-        </div>
-
-        <div class="NewsDescription">
-          {{ news.fulldescription }}
-        </div>
-
-        <div class="NewsActions">
-          <button class="vote-btn" @click="goToVote">Vote on This News</button>
-          <button class="comment-btn" @click="goToComment">
-            View More Comment
-          </button>
-        </div>
-      </div>
-    </div>
-    <!-- Main Class -->
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -166,242 +88,134 @@ function goToComment() {
 }
 </script>
 
+<template>
+  <div class="w-[900px] mx-auto justify-center pb-[40px]">
+    <div
+      v-if="isLoading"
+      class="fixed inset-0 bg-white/95 flex flex-col items-center justify-center z-[9999] text-center text-[18px] text-[#333] font-[Outfit]"
+    >
+      <div
+        class="w-[60px] h-[60px] border-[6px] border-gray-200 border-t-[#003791] rounded-full animate-spin mb-[15px]"
+      ></div>
+      <p>Loading news...</p>
+    </div>
+
+    <div v-else>
+      <router-link
+        to="/"
+        class="flex items-center gap-[6px] bg-gray-100 text-black text-[16px] rounded-[8px] px-[20px] py-[10px] max-w-fit cursor-pointer transition-colors duration-300 ease-in-out hover:bg-gray-300 hover:text-black no-underline"
+      >
+        <img
+          src="@/assets/Card/Back.png"
+          alt="Back Icon"
+          class="w-[20px] h-[20px] mr-[5px] align-middle"
+        />
+        Back to News List
+      </router-link>
+
+      <div
+        class="text-black mt-[10px] bg-white border border-gray-300 rounded-[8px] shadow-[0_4px_10px_rgba(0,0,0,0.15)] min-h-[650px] text-left p-[20px]"
+      >
+        <h1 class="text-4xl font-bold mb-2 ml-[20px]">{{ news.title }}</h1>
+        <div
+          class="flex items-center justify-start gap-[12px] w-full p-0 rounded-[6px] max-w-fit ml-[20px] mt-5"
+        >
+          <span
+            class="inline-flex items-center justify-center text-[17px] px-2 py-1 rounded-[6px] font-medium m-0"
+            :class="{
+              'bg-green-100 text-green-700': news.stats === 'Verified',
+              'bg-red-100 text-red-700': news.stats === 'Fake News',
+              'bg-yellow-100 text-yellow-700':
+                news.stats === 'Under Review' || news.stats === 'Unverified',
+            }"
+          >
+            {{ news.stats }}
+          </span>
+
+          <span class="inline-flex items-center text-gray-600 m-0">
+            <img
+              :src="AuthorIcon"
+              alt="Author Icon"
+              class="w-[20px] h-[20px] ml-[8px] mr-[8px] align-middle"
+            />
+            By {{ news.author || "Unknown" }}
+          </span>
+
+          <span class="inline-flex items-center text-gray-600 m-0">
+            <img
+              :src="DateIcon"
+              alt="Date Icon"
+              class="w-[20px] h-[20px] mx-[8px] align-middle"
+            />
+            By {{ news.date || "Unknown" }}
+          </span>
+        </div>
+
+        <div
+          class="flex items-center justify-start gap-[12px] mt-[15px] max-w-fit ml-[20px]"
+        >
+          <span
+            class="inline-flex items-center gap-[6px] font-medium text-black rounded-[6px] px-[12px] py-[6px] bg-green-50 transition-transform duration-200 ease-in-out"
+          >
+            <img :src="LikeIcon" alt="Like" class="w-5 h-5" />
+            {{ news.upVotes }}
+          </span>
+
+          <span
+            class="inline-flex items-center gap-[6px] font-medium text-black rounded-[6px] px-[12px] py-[6px] bg-red-50 transition-transform duration-200 ease-in-out"
+          >
+            <img :src="DisLikeIcon" alt="DisLike" class="w-5 h-5" />
+            {{ news.downVotes }}
+          </span>
+
+          <span
+            class="inline-flex items-center gap-[6px] font-medium text-black rounded-[6px] px-[12px] py-[6px] bg-gray-100 transition-transform duration-200 ease-in-out"
+          >
+            <img :src="CommentIcon" alt="Comment" class="w-5 h-5" />
+            {{ news.comments }} Comments
+          </span>
+        </div>
+
+        <div
+          class="w-full flex justify-center my-[15px] rounded-[6px] mt-7"
+          v-if="getImageById(news.id)"
+        >
+          <img
+            :src="getImageById(news.id)"
+            alt="News Image"
+            class="w-[820px] max-h-[270px] object-cover rounded-[6px] shadow-[0_4px_12px_rgba(0,0,0,0.2)]"
+          />
+        </div>
+
+        <div
+          class="text-[17px] max-w-full w-[820px] mt-[20px] ml-[20px] mb-[20px] pb-[20px] border-b-2 border-gray-200"
+        >
+          {{ news.fulldescription }}
+        </div>
+
+        <div class="flex gap-[10px] ml-[20px] w-[820px]">
+          <!-- ปุ่ม Vote -->
+          <button
+            @click="goToVote"
+            class="flex-1 px-[15px] py-[10px] rounded-[6px] text-[16px] bg-blue-500 text-white font-medium cursor-pointer transition-colors duration-300 ease-in-out hover:bg-blue-600"
+          >
+            Vote on This News
+          </button>
+
+          <!-- ปุ่ม Comment -->
+          <button
+            @click="goToComment"
+            class="flex-1 px-[15px] py-[10px] rounded-[6px] text-[16px] bg-gray-200 text-gray-900 font-medium cursor-pointer transition-colors duration-300 ease-in-out hover:bg-gray-300"
+          >
+            View More Comment
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
 <style scoped>
-.LoadingScreen {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(255, 255, 255, 0.95);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  text-align: center;
-  font-size: 18px;
-  color: #333;
-  font-family: "Outfit", sans-serif;
-}
-
-.spinner {
-  border: 6px solid #e5e7eb;
-  border-top: 6px solid #003791;
-  border-radius: 50%;
-  width: 60px;
-  height: 60px;
-  animation: spin 1s linear infinite;
-  margin-bottom: 15px;
-}
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.PageContainer {
-  width: 900px;
-  margin: 0 auto;
-  justify-content: center;
-  padding-bottom: 40px;
-}
-
-.BackButtonContainer {
-  max-width: fit-content;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background-color: #f3f4f6;
-  color: #000;
-  font-size: 16px;
-  text-decoration: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  margin-left: 0;
-}
-
-
-.back-button {
-  display: flex;
-  align-items: center;
-  font-size: 16px;
-  line-height: 1;
-  transition: all 0.3s ease;
-  color: #000;
-}
-
-.BackButtonContainer:hover {
-  background-color: #d1d5db;
-}
-
-.BackIcon {
-  width: 20px;
-  height: 20px;
-  margin-right: 5px;
-  vertical-align: middle;
-}
-
-.NewsDetailContent {
-  color: #000000;
-  margin-top: 10px;
-  background-color: #ffffff; /* เพิ่มพื้นหลังอ่อนๆ จะเห็นเงาชัดขึ้น */
-  border: 1px solid #d1d5db; /* เส้นขอบเทาอ่อน (เหมือน Tailwind gray-300) */
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* เงาเบลอหน่อย ดูนุ่ม */
-  min-height: 650px;
-  text-align: left;
-  padding: 20px;
-}
-
-.NewsDetailContent h1 {
-  margin-top: -5px;
-  font-size: 30px;
-  margin-left: 20px;
-}
-
-.NewsMeta {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 12px;
-  width: 100%;
-  padding: 0px;
-  border-radius: 6px;
-  max-width: fit-content;
-  margin-left: 20px;
-}
-
-/* Status badge */
-.news-status {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 17px;
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  font-weight: 500;
-  margin: 0;
-}
-
-/* สีของแต่ละสถานะ (คงไว้ตามเดิม) */
-.news-status.verified {
-  background-color: #d1fae5;
-  color: #047857;
-}
-.news-status.fake {
-  background-color: #fee2e2;
-  color: #b91c1c;
-}
-.news-status.review {
-  background-color: #fef9c3;
-  color: #ca8a04;
-}
-
-/* Author (icon + text) */
-.AuthorContainer {
-  display: inline-flex;
-  align-items: center;
-  color: #4b5563;
-  margin: 0;
-}
-
-.AuthorIcon {
-  width: 20px;
-  height: 20px;
-  margin-left: 8px;
-  margin-right: 8px;
-  vertical-align: middle;
-}
-
-.DateContainer {
-  display: inline-flex;
-  align-items: center;
-  color: #4b5563;
-  margin: 0;
-}
-
-.DateIcon {
-  width: 20px;
-  height: 20px;
-  margin-left: 8px;
-  margin-right: 8px;
-  vertical-align: middle;
-}
-
-/* กล่องรวม feedback ทั้งหมด */
-.FeedbackSection {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 12px;
-  margin-top: 15px;
-  max-width: fit-content;
-  margin-left: 20px;
-}
-
-/* กล่องพื้นฐานของแต่ละอัน */
-.VotingSystem {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 500;
-  color: #ffffff; /* ตัวอักษรขาว */
-  border-radius: 6px;
-  padding: 6px 12px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  color: #000;
-}
-
-/* Like = สีเขียว */
-.VotingSystem.Like {
-  background-color: #f0fdf4; /* Tailwind green-600 */
-}
-
-/* Dislike = สีแดง */
-.VotingSystem.Dislike {
-  background-color: #fef2f2; /* Tailwind red-600 */
-}
-
-/* Comment = สีฟ้า (หรือจะเปลี่ยนเป็นสีแดงก็ได้) */
-.VotingSystem.Comment {
-  background-color: #f3f4f6; /* Tailwind blue-600 */
-}
-
-/* Icon ข้างใน */
-.icon {
-  width: 20px;
-  height: 20px;
-  vertical-align: middle;
-}
-
-.ImageOfNews {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  margin: 15px 0;
-  border-radius: 6px;
-}
-
-.NewsMainImage {
-  width: 820px;
-  max-height: 270px;
-  object-fit: cover;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  border-radius: 6px;
-}
-
-.NewsDescription {
-  font-size: 17px;
-  max-width: 100%;
-  width: 820px;
-  margin-top: 20px;
-  margin-left: 20px;
-  margin-bottom: 20px;
-  padding-bottom: 20px; /* เพิ่มช่องว่างก่อนเส้นเล็กน้อย */
-  border-bottom: 2px solid #e5e7eb; /* เส้นสีเทาอ่อน (#e5e7eb = Tailwind gray-200) */
-}
-
 .NewsActions {
   display: flex;
   gap: 10px; /* ระยะห่างระหว่างปุ่ม */

@@ -163,12 +163,11 @@ const paginatedNews = computed(() =>
           </div>
 
           <button
-  class="w-full h-10 border border-gray-200 bg-gray-100 rounded-lg cursor-pointer transition-colors duration-300 ease-in-out hover:!bg-blue-600 hover:!text-white"
-  @click="goToDetail(item.id)"
->
-  View Details
-</button>
-
+            class="w-full h-10 border border-gray-200 bg-gray-100 rounded-lg cursor-pointer transition-colors duration-300 ease-in-out hover:!bg-blue-600 hover:!text-white"
+            @click="goToDetail(item.id)"
+          >
+            View Details
+          </button>
         </div>
       </div>
     </div>
