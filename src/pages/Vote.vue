@@ -1,99 +1,3 @@
-<template>
-  <div class="PageContainer">
-    <div v-if="isLoading" class="LoadingScreen">
-      <div class="spinner"></div>
-      <p>Loading news...</p>
-    </div>
-
-    <div v-else>
-      <router-link :to="`/news/${id}`" class="BackButtonContainer">
-        <img src="@/assets/Card/Back.png" alt="Back Icon" class="BackIcon" />
-        Back to News Detail
-      </router-link>
-
-      <div class="VoteWrapper">
-        <div class="NewsCard">
-          <h2 class="NewsTitle">{{ news.title }}</h2>
-
-          <span
-            class="news-status"
-            :class="{
-              verified: news.stats === 'Verified',
-              fake: news.stats === 'Fake News',
-              review:
-                news.stats === 'Under Review' || news.stats === 'Unverified',
-            }"
-          >
-            {{ news.stats }}
-          </span>
-
-          <p class="NewsDesc mt-4">{{ news.description }}</p>
-          <p class="NewsMeta mt-3">By {{ news.author }} • {{ news.date }}</p>
-
-          <div class="VotingSystem">
-            <span class="Like">
-              <img :src="LikeIcon" alt="Like" class="icon" />
-              {{ news.upVotes }}
-            </span>
-            <span class="DisLike">
-              <img :src="DislikeIcon" alt="DisLike" class="icon" />
-              {{ news.downVotes }}
-            </span>
-          </div>
-        </div>
-
-        <div class="VoteForm">
-          <h3 class="FormTitle">Cast Your Vote</h3>
-
-          <label class="Label name">Your Name</label>
-          <input
-            v-model="form.name"
-            type="text"
-            placeholder="Enter your name"
-            class="Input"
-          />
-
-          <label class="Label vote">Your Vote</label>
-          <div class="VoteButtons">
-            <button
-              :class="['VoteBtn', form.vote === 'up' ? 'active real' : '']"
-              @click="form.vote = 'up'"
-            >
-              This is Real
-            </button>
-
-            <button
-              :class="['VoteBtn', form.vote === 'down' ? 'active fake' : '']"
-              @click="form.vote = 'down'"
-            >
-              This is Fake
-            </button>
-          </div>
-
-          <label class="Label comment">Your Comment *</label>
-          <textarea
-            v-model="form.comment"
-            placeholder="Explain why you think this news is real or fake..."
-            class="Textarea"
-          ></textarea>
-
-          <label class="Label mt-4">Supporting Image URL (optional)</label>
-          <input
-            v-model="form.imageUrl"
-            type="text"
-            placeholder="https://example.com/image.jpg"
-            class="Input"
-          />
-
-          <button class="SubmitBtn mt-5" @click="submitVote">
-            Submit Vote & Comment
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
@@ -159,7 +63,9 @@ async function submitVote() {
     const data = await res.json();
 
     if (res.ok) {
-      alert("✅ you for your vote! Your feedback has been successfully recorded.");
+      alert(
+        "✅ you for your vote! Your feedback has been successfully recorded."
+      );
 
       form.value = { name: "", vote: "", comment: "", imageUrl: "" };
 
@@ -174,253 +80,148 @@ async function submitVote() {
     isSubmitting.value = false;
   }
 }
-
-
 </script>
 
-<style scoped>
-.PageContainer {
-  width: 800px;
-  height: 1000px;
-  font-family: "Outfit", sans-serif;
-  padding: 40px;
-}
+<template>
+  <div class="w-[800px] mx-auto justify-center pb-[40px]">
+    <div
+      v-if="isLoading"
+      class="fixed inset-0 bg-white/95 flex flex-col items-center justify-center z-[9999] text-[18px] text-[#333]"
+    >
+      <div
+        class="w-[60px] h-[60px] mb-[15px] rounded-full border-[6px] border-gray-200 border-t-[#003791] animate-spin"
+      ></div>
+      <p>Loading news...</p>
+    </div>
 
-/* Back Button */
-.BackButtonContainer {
-  max-width: fit-content;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background-color: #f3f4f6;
-  color: #000;
-  font-size: 16px;
-  text-decoration: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  margin-left: 0;
-}
+    <div v-else>
+      <router-link
+        :to="`/news/${id}`"
+        class="flex items-center gap-[6px] bg-gray-100 text-black text-[16px] rounded-[8px] px-[20px] py-[10px] max-w-fit cursor-pointer transition-colors duration-300 ease-in-out hover:bg-gray-300 hover:text-black no-underline"
+      >
+        <img
+          src="@/assets/Card/Back.png"
+          alt="Back Icon"
+          class="w-[20px] h-[20px] mr-[5px] align-middle"
+        />
+        Back to News Detail
+      </router-link>
 
-.back-button {
-  display: flex;
-  align-items: center;
-  font-size: 16px;
-  line-height: 1;
-  transition: all 0.3s ease;
-  color: #000;
-}
-.BackButtonContainer:hover {
-  background-color: #d1d5db;
-}
-.BackIcon {
-  width: 20px;
-  height: 20px;
-  margin-right: 5px;
-  vertical-align: middle;
-}
+      <div class="flex justify-center gap-[15px] mt-[10px]">
+        <div
+          class="flex-1 bg-white border border-gray-300 rounded-[12px] p-[30px] shadow-[0_4px_10px_rgba(0,0,0,0.1)] text-left"
+        >
+          <h2 class="text-[1.6rem] font-bold -mt-[10px]">{{ news.title }}</h2>
 
-/* Layout */
-.VoteWrapper {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-top: 10px;
-}
+          <span
+            class="block mx-auto mt-[10px] px-[12px] py-[6px] rounded-[6px] text-[1rem] font-medium w-fit"
+            :class="{
+              'bg-emerald-100 text-emerald-700': news.stats === 'Verified',
+              'bg-red-100 text-red-700': news.stats === 'Fake News',
+              'bg-yellow-100 text-yellow-600':
+                news.stats === 'Under Review' || news.stats === 'Unverified',
+            }"
+          >
+            {{ news.stats }}
+          </span>
 
-/* Left Side */
-.NewsCard {
-  flex: 1;
-  background: rgb(255, 255, 255);
-  border: 1px solid #d1d5db;
-  border-radius: 12px;
-  padding: 30px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  text-align: left;
-}
-.NewsTitle {
-  font-size: 1.6rem;
-  font-weight: 700;
-  margin-top: -10px;
-}
+          <p class="text-[#444] leading-[1.6] mt-4">{{ news.description }}</p>
+          <p class="text-[#666] text-[0.9rem] mt-4">
+            By {{ news.author }} • {{ news.date }}
+          </p>
 
-/* News Status Badge */
-.news-status {
-  display: block;
-  margin: 10px auto 0;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 500;
-  width: fit-content;
-}
-.news-status.verified {
-  background-color: #d1fae5;
-  color: #047857;
-}
-.news-status.fake {
-  background-color: #fee2e2;
-  color: #b91c1c;
-}
-.news-status.review {
-  background-color: #fef9c3;
-  color: #ca8a04;
-}
+          <div class="flex justify-center items-center gap-[10px] mt-[15px]">
+            <span
+              class="text-green-700 rounded-[6px] px-[12px] py-[6px] font-medium flex items-center gap-1"
+            >
+              <img
+                :src="LikeIcon"
+                alt="Like"
+                class="w-[25px] h-[25px] align-middle"
+              />
+              {{ news.upVotes }}
+            </span>
 
-.NewsDesc {
-  color: #444;
-  line-height: 1.6;
-}
-.NewsMeta {
-  color: #666;
-  font-size: 0.9rem;
-}
+            <span
+              class="text-red-700 rounded-[6px] px-[12px] py-[6px] font-medium flex items-center gap-1"
+            >
+              <img
+                :src="DislikeIcon"
+                alt="Dislike"
+                class="w-[25px] h-[25px] align-middle"
+              />
+              {{ news.downVotes }}
+            </span>
+          </div>
+        </div>
 
-.icon {
-  width: 20px;
-  height: 20px;
-  vertical-align: middle;
-}
+        <div
+          class="flex-1 bg-white border border-gray-300 rounded-[12px] p-[30px] shadow-[0_4px_10px_rgba(0,0,0,0.1)] text-left"
+        >
+          <h3 class="text-[1.4rem] font-semibold -mt-[10px] mb-4">
+            Cast Your Vote
+          </h3>
 
-/* Voting System */
-.VotingSystem {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  margin-top: 15px;
-}
-.VotingSystem .Like {
-  color: #15803d;
-  border-radius: 6px;
-  padding: 6px 12px;
-  font-weight: 500;
-}
-.VotingSystem .DisLike {
-  color: #b91c1c;
-  border-radius: 6px;
-  padding: 6px 12px;
-  font-weight: 500;
-}
+          <label class="block font-medium mb-[0.3rem]">Your Name</label>
+          <input
+            v-model="form.name"
+            type="text"
+            placeholder="Enter your name"
+            class="w-full border border-gray-300 rounded-[6px] p-[10px] text-[1rem] font-[Outfit] mt-[-5px] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
+          />
 
-/* Right Side */
-.VoteForm {
-  flex: 1;
-  background: white;
-  border: 1px solid #d1d5db;
-  border-radius: 12px;
-  padding: 30px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  text-align: left;
-}
+          <label class="block font-medium mb-[0.3rem] mt-4">Your Vote</label>
+          <div class="flex gap-3 mt-[-5px]">
+            <button
+              :class="[
+                'flex-1 rounded-[6px] py-[10px] font-medium transition-colors duration-200',
+                form.vote === 'up'
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-gray-200 text-black hover:bg-green-700',
+              ]"
+              @click="form.vote = 'up'"
+            >
+              This is Real
+            </button>
 
-.FormTitle {
-  margin-top: -10px;
-  font-size: 1.4rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-}
+            <button
+              :class="[
+                'flex-1 rounded-[6px] py-[10px] font-medium transition-colors duration-200',
+                form.vote === 'down'
+                  ? 'bg-red-600 text-white hover:bg-red-700'
+                  : 'bg-gray-200 text-black hover:bg-red-700',
+              ]"
+              @click="form.vote = 'down'"
+            >
+              This is Fake
+            </button>
+          </div>
 
-.Label {
-  display: block;
-  font-weight: 500;
-  margin-bottom: 0.3rem;
-}
+          <label class="block font-medium mb-[0.3rem] mt-4">Your Comment</label>
+          <textarea
+            v-model="form.comment"
+            placeholder="Explain why you think this news is real or fake..."
+            class="w-full border border-gray-300 rounded-[6px] p-[10px] text-[1rem] font-[Outfit] mt-[-5px] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 min-h-[100px] resize-none"
+          ></textarea>
 
-.Input,
-.Textarea {
-  font-family: "Outfit", sans-serif;
-  width: 100%;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  padding: 10px;
-  font-size: 1rem;
-  outline: none;
-  margin-top: -5px;
-}
-.Input:focus,
-.Textarea:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
-}
+          <label class="block font-medium mb-[0.3rem] mt-4"
+            >Supporting Image URL (optional)</label
+          >
+          <input
+            v-model="form.imageUrl"
+            type="text"
+            placeholder="https://example.com/image.jpg"
+            class="w-full border border-gray-300 rounded-[6px] p-[10px] text-[1rem] font-[Outfit] mt-[-5px] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
+          />
 
-.Textarea {
-  min-height: 100px;
-  resize: none;
-}
-
-/* Vote Buttons */
-.VoteButtons {
-  display: flex;
-  width: 100%;
-  gap: 5px;
-  margin-top: -5px;
-}
-.VoteBtn {
-  flex: 1;
-  border-radius: 6px;
-  padding: 10px;
-  font-size: 1rem;
-  background: #f3f4f6;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: center;
-}
-.VoteBtn:hover {
-  background: #1d4ed8;
-  color: white;
-}
-.VoteBtn.active.real {
-  background: #008235;
-  color: white;
-}
-.VoteBtn.active.fake {
-  background: #c10007;
-  color: white;
-}
-
-/* Submit Button */
-.SubmitBtn {
-  width: 100%;
-  background: #2563eb;
-  color: white;
-  padding: 10px;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.SubmitBtn:hover {
-  background: #1d4ed8;
-}
-
-/* Loader */
-.LoadingScreen {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(255, 255, 255, 0.95);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  font-size: 18px;
-  color: #333;
-}
-.spinner {
-  border: 6px solid #e5e7eb;
-  border-top: 6px solid #003791;
-  border-radius: 50%;
-  width: 60px;
-  height: 60px;
-  animation: spin 1s linear infinite;
-  margin-bottom: 15px;
-}
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-</style>
+          <button
+            class="mt-5 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-[12px] rounded-[6px] transition-colors duration-200"
+            @click="submitVote"
+          >
+            Submit Vote & Comment
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
