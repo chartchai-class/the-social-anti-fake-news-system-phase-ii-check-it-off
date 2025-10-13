@@ -1,68 +1,118 @@
 <template>
-  <div class="PageContainer">
+  <div class="w-[900px] min-h-[1000px] font-[Outfit] p-10 mx-auto">
     <router-link
-      :to="{ name: 'NewsDetail', params: { id } }"
-      class="BackButtonContainer"
+      :to="`/news/${id}`"
+      class="flex items-center gap-[6px] bg-gray-100 text-black text-[16px] rounded-[8px] px-[20px] py-[10px] max-w-fit cursor-pointer transition-colors duration-300 ease-in-out hover:bg-gray-300 hover:text-black no-underline"
     >
-      <img src="@/assets/Card/Back.png" alt="Back Icon" class="BackIcon" />
-      Back to News Details
+      <img
+        src="@/assets/Card/Back.png"
+        alt="Back Icon"
+        class="w-[20px] h-[20px] mr-[5px] align-middle"
+      />
+      Back to News Detail
     </router-link>
 
-    <div class="NewsCard">
-      <div class="LeftSection">
-        <h2 class="NewsTitle">
+    <div
+      class="h-[170px] bg-white rounded-xl border border-[#d6d6d6] shadow-[0_3px_8px_rgba(0,0,0,0.08)] px-6 py-5 flex justify-between items-center w-full mt-2.5"
+    >
+      <div class="flex flex-col justify-center gap-[10px]">
+        <h2 class="font-bold text-[25px] text-[#111827] m-0 p-0 mb-3">
           Government Launches New Education Reform Policy
         </h2>
-        <div class="VoteInfo">
-          <div class="vote-item">
-            <span class="Like">
-              <img :src="LikeIcon" alt="Like" class="icon" />
-              {{ news.upVotes }} Up Votes
-            </span>
+        <div class="VoteInfo flex gap-6 text-[19px]">
+          <!-- Up Vote -->
+          <div class="flex items-center gap-2">
+            <img :src="LikeIcon" alt="Like" class="w-7 h-7" />
+            <span class="text-gray-800 font-medium"
+              >{{ news.upVotes }} Up Votes</span
+            >
           </div>
-          <div class="vote-item">
-            <span class="DisLike">
-              <img :src="DislikeIcon" alt="DisLike" class="icon" />
-              {{ news.downVotes }} Down Votes
-            </span>
+
+          <!-- Down Vote -->
+          <div class="flex items-center gap-2">
+            <img :src="DislikeIcon" alt="Dislike" class="w-7 h-7" />
+            <span class="text-gray-800 font-medium"
+              >{{ news.downVotes }} Down Votes</span
+            >
           </div>
-          <div class="vote-item">
-            <span class="Comment">
-              <img :src="CommentIcon" alt="Comment" class="icon" />
-              {{ news.comments }} Total comments
-            </span>
+
+          <!-- Comment -->
+          <div class="flex items-center gap-2">
+            <img :src="CommentIcon" alt="Comment" class="w-7 h-7" />
+            <span class="text-gray-800 font-medium"
+              >{{ news.comments }} Total comments</span
+            >
           </div>
         </div>
       </div>
-      <router-link :to="{ name: 'Vote', params: { id } }" class="AddVoteBtn">
+      <router-link
+        :to="{ name: 'Vote', params: { id } }"
+        class="bg-blue-500 text-white rounded-md px-5 py-2.5 text-[15px] font-medium cursor-pointer transition-all duration-300 ease-in-out hover:bg-blue-600"
+      >
         Add Your Vote
       </router-link>
     </div>
-    <div class="CommentsSection">
-      <h1 class="CommentHeader">Comments & Votes</h1>
+    <div class="w-[815px] my-10 mx-auto font-[Outfit]">
+      <h1 class="text-[25px] font-bold mb-6 text-[#111827] text-left">
+        Comments & Votes
+      </h1>
 
       <div v-if="isLoadingComments">Loading comments...</div>
 
-      <div v-else-if="comments.length === 0" class="NoComments">
+      <div
+        v-else-if="comments.length === 0"
+        class="text-center text-[#666] italic mt-[10px]"
+      >
         No comments yet.
       </div>
 
       <div v-else>
-        <div v-for="c in comments" :key="c.name" class="CommentCard">
-          <div class="CommentAuthor">
-            <span class="AuthorName">{{ c.name }}</span>
-            <span v-if="c.status === 'Real'" class="TagReal"> Real </span>
-            <span v-else-if="c.status === 'Fake'" class="TagFake"> Fake </span>
-            <span v-else class="TagReview"> Review </span>
+        <div
+          v-for="c in comments"
+          :key="c.name"
+          class="flex flex-col items-start justify-start text-left gap-4 bg-white rounded-xl py-5 w-full relative after:content-[''] after:block after:h-px after:bg-gray-300 after:w-full last:after:hidden"
+        >
+          <!-- ชื่อผู้เขียน + แท็กสถานะ -->
+          <div class="flex items-center gap-3 w-full">
+            <span
+              class="font-[Outfit] font-semibold text-[18px] text-[#111827]"
+            >
+              {{ c.name }}
+            </span>
+
+            <span
+              v-if="c.status === 'Real'"
+              class="text-green-600 bg-green-100 px-2 py-[2px] rounded-md text-sm font-medium"
+            >
+              Real
+            </span>
+            <span
+              v-else-if="c.status === 'Fake'"
+              class="text-red-600 bg-red-100 px-2 py-[2px] rounded-md text-sm font-medium"
+            >
+              Fake
+            </span>
+            <span
+              v-else
+              class="text-yellow-600 bg-yellow-100 px-2 py-[2px] rounded-md text-sm font-medium"
+            >
+              Review
+            </span>
           </div>
 
-          <p class="CommentText">{{ c.comment }}</p>
+          <!-- ข้อความคอมเมนต์ -->
+          <p
+            class="font-[Outfit] text-gray-700 text-[16px] leading-relaxed w-full"
+          >
+            {{ c.comment }}
+          </p>
 
+          <!-- รูปภาพ (ถ้ามี) -->
           <img
             v-if="c.imageUrl"
             :src="c.imageUrl"
             alt="Comment Image"
-            class="CommentImage"
+            class="w-full max-w-[400px] rounded-lg object-cover"
           />
         </div>
       </div>
@@ -138,204 +188,3 @@ onMounted(async () => {
   }
 });
 </script>
-
-<style scoped>
-.PageContainer {
-  width: 800px;
-  min-height: 1000px;
-  font-family: "Outfit", sans-serif;
-  padding: 40px;
-  margin: 0 auto;
-}
-.BackButtonContainer {
-  max-width: fit-content;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background-color: #f3f4f6;
-  color: #000;
-  font-size: 16px;
-  text-decoration: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  margin-left: 0;
-}
-.back-button {
-  display: flex;
-  align-items: center;
-  font-size: 16px;
-  line-height: 1;
-  transition: all 0.3s ease;
-  color: #000;
-  text-decoration: none;
-}
-.BackButtonContainer:hover {
-  background-color: #d1d5db;
-}
-.BackIcon {
-  width: 20px;
-  height: 20px;
-  margin-right: 5px;
-  vertical-align: middle;
-}
-.NewsCard {
-  height: 110px;
-  background: #fff;
-  border-radius: 12px;
-  border: 1px solid #d6d6d6;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
-  padding: 20px 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-   margin-top: 10px;
-}
-.LeftSection {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 10px;
-}
-.NewsTitle {
-  font-weight: 700;
-  font-size: 25px;
-  color: #111827;
-  margin: 0;
-  padding: 0;
-}
-.VoteInfo {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin: 0;
-  padding: 0;
-}
-.vote-item {
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #333;
-}
-.vote-icon {
-  width: 22px;
-  height: 22px;
-}
-.AddVoteBtn {
-  background-color: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 10px 20px;
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-.AddVoteBtn:hover {
-  background-color: #1d4ed8;
-}
-.CommentsSection {
-  width: 850px;
-  margin: 40px auto;
-  font-family: "Outfit", sans-serif;
-}
-.CommentHeader {
-  font-size: 25px;
-  font-weight: 700;
-  margin-bottom: 24px;
-  color: #111827;
-  text-align: left;
-}
-.CommentCard {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  text-align: left;
-  gap: 16px;
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px 0 20px 0;
-  width: 100%;
-}
-.CommentAuthor {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-left: 0;
-}
-.AuthorName {
-  font-weight: 700;
-  font-size: 18px;
-  color: #111827;
-  margin-left: 20px;
-}
-.TagReal {
-  background-color: #d1fae5;
-  color: #047857;
-  font-weight: 600;
-  font-size: 14px;
-  padding: 4px 10px;
-  border-radius: 6px;
-}
-.CommentImage {
-  width: 350px;
-  height: auto;
-  border-radius: 12px;
-  object-fit: cover;
-  margin-left: 20px;
-}
-.CommentText {
-  font-size: 16px;
-  line-height: 1.7;
-  color: #111;
-  margin: 0;
-  text-align: left;
-  margin-left: 20px;
-  margin-right: 20px;
-}
-
-.icon {
-  width: 20px;
-  height: 20px;
-  vertical-align: middle;
-}
-.TagFake {
-  background-color: #fee2e2;
-  color: #b91c1c;
-  font-weight: 600;
-  font-size: 14px;
-  padding: 4px 10px;
-  border-radius: 6px;
-}
-
-.TagReview {
-  background-color: #fef3c7;
-  color: #92400e;
-  font-weight: 600;
-  font-size: 14px;
-  padding: 4px 10px;
-  border-radius: 6px;
-}
-
-.NoComments {
-  text-align: center;
-  color: #666;
-  font-style: italic;
-  margin-top: 10px;
-}
-
-.CommentCard:not(:last-child)::after {
-  content: "";
-  display: block;
-  height: 1px;
-  background-color: #d1d5db;
-  width: 100%;
-  margin-top: 16px;
-}
-
-</style>
