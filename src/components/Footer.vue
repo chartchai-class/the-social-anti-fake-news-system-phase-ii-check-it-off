@@ -1,147 +1,49 @@
 <template>
-  <footer class="footer">
-    <div class="footer-container">
-      <div class="footer-left">
-        <h2 class="footer-title">Check It Off</h2>
-        <p class="footer-tagline">Social Anti-Fake News System</p>
+  <footer
+    class="w-[120%] bg-gradient-to-tr from-blue-500/70 via-blue-500/50 via-green-500/70 to-green-300/70 px-8 py-7 rounded-[30px] text-white font-[Outfit] shadow-[0_-2px_10px_rgba(0,0,0,0.15)] mt-12 text-center"
+  >
+    <div class="flex flex-wrap justify-between items-center text-center gap-4">
+      <div class="flex-1">
+        <h2 class="text-[1.6rem] font-bold tracking-[1px]">Check It Off</h2>
+        <p class="text-[0.95rem] opacity-85">Social Anti-Fake News System</p>
       </div>
 
-      <div class="footer-center">
+      <div class="flex justify-center items-center gap-[1.2rem]">
         <a
           href="https://github.com/chartchai-class/project-01-the-anti-fake-news-system-check-it-off-Vue.git"
           target="_blank"
           rel="noopener"
-          class="social-icon github"
           aria-label="GitHub Repository"
+          class="flex justify-center items-center w-[50px] h-[50px] rounded-full bg-white/15 transition-all duration-300 ease-in-out hover:bg-white hover:-translate-y-1 hover:shadow-[0_3px_6px_rgba(0,0,0,0.2)]"
         >
-          <img src="@/assets/github.svg" alt="GitHub" class="icon-img" />
+          <img
+            src="@/assets/github.svg"
+            alt="GitHub"
+            class="w-[28px] h-[28px] brightness-0 invert transition-all duration-300 group-hover:brightness-0 group-hover:invert-0"
+          />
         </a>
 
         <a
           href="https://docs.google.com/spreadsheets/d/1xXd_djAF1jp7c5jrY-mzAwVYxSN9wbl_0RTpKKvH0AA/edit?usp=sharing"
           target="_blank"
           rel="noopener"
-          class="social-icon sheet"
           aria-label="Google Sheets"
+          class="flex justify-center items-center w-[50px] h-[50px] rounded-full bg-white/15 transition-all duration-300 ease-in-out hover:bg-white hover:-translate-y-1 hover:shadow-[0_3px_6px_rgba(0,0,0,0.2)]"
         >
-          <img src="@/assets/google-sheet.svg" alt="Google Sheets" class="icon-img" />
+          <img
+            src="@/assets/google-sheet.svg"
+            alt="Google Sheets"
+            class="w-[28px] h-[28px] brightness-0 invert transition-all duration-300 hover:brightness-0 hover:saturate-[100%] hover:invert-[45%] hover:sepia-[96%] hover:saturate-[511%] hover:hue-rotate-[90deg] hover:brightness-[95%] hover:contrast-[89%]"
+          />
         </a>
       </div>
 
-      <div class="footer-right">
-        <p class="footer-credit">
-          © 2025 <span class="highlight">Check It Off</span> — Developed by
+      <div class="flex-1">
+        <p class="text-[0.95rem]">
+          © 2025 <span class="font-semibold text-[#e0f2fe]">Check It Off</span> — Developed by
           <b>Nawapon Somruang 662115027</b>
         </p>
       </div>
     </div>
   </footer>
 </template>
-
-<style scoped>
-.footer {
-  width: 115%;
-  background: linear-gradient(
-    120deg,
-    rgba(59, 130, 246, 0.7),
-     rgba(59, 130, 246, 0.5),
-    rgba(34, 197, 94, 0.7),
-    rgba(134, 239, 172, 0.7)
-  );
-  padding: 1.8rem 2rem;
- border-radius: 30px;
-  color: #ffffff;
-  font-family: "Outfit", sans-serif;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.15);
-  margin-top: 3rem;
-}
-
-.footer-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  text-align: center;
-  gap: 1rem;
-}
-
-.footer-left {
-  flex: 1;
-}
-
-.footer-title {
-  font-size: 1.6rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-}
-
-.footer-tagline {
-  font-size: 0.95rem;
-  opacity: 0.85;
-}
-
-.footer-center {
-  display: flex;
-  gap: 1.2rem;
-  justify-content: center;
-  align-items: center;
-}
-
-.social-icon {
-  background-color: rgba(255, 255, 255, 0.15);
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: all 0.3s ease;
-}
-
-.social-icon:hover {
-  background-color: #ffffff;
-  transform: translateY(-4px);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-}
-
-.social-icon.github:hover img {
-  filter: brightness(0) invert(0);
-}
-
-.social-icon.sheet:hover img {
-  filter: brightness(0) saturate(100%) invert(45%) sepia(96%) saturate(511%)
-    hue-rotate(90deg) brightness(95%) contrast(89%);
-}
-
-.icon-img {
-  width: 28px;
-  height: 28px;
-  filter: brightness(0) invert(1);
-  transition: filter 0.3s ease;
-}
-
-.footer-right {
-  flex: 1;
-}
-
-.footer-credit {
-  font-size: 0.95rem;
-}
-
-.footer-credit .highlight {
-  font-weight: 600;
-  color: #e0f2fe;
-}
-
-@media (max-width: 768px) {
-  .footer-container {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .footer-left,
-  .footer-right {
-    flex: unset;
-  }
-}
-</style>
