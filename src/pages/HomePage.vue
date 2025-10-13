@@ -57,8 +57,6 @@ function loadMore() {
 
 <template>
   <div id="app" class="flex flex-col min-h-screen bg-white font-[Outfit]">
-    <router-link to="/add-news" class="bg-gray-500 font-[Outfit]">
-    </router-link>
 
     <Header />
 
@@ -122,6 +120,14 @@ function loadMore() {
       >
         More News
       </button>
+
+      <router-link
+      to="/login"
+      class="bg-[#2563eb] text-white px-5 py-2.5 rounded-md font-[Outfit] text-[15px] font-medium
+             cursor-pointer transition-all duration-300 ease-in-out hover:bg-[#1d4ed8] ml-20" 
+    >
+      Login
+    </router-link>
     </div>
 
     <Footer />
