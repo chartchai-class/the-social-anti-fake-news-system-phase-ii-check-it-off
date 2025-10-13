@@ -16,7 +16,8 @@
     "express": "^5.1.0",
     "googleapis": "^161.0.0",
     "vue": "^3.5.22",
-    "vue-router": "^4.5.1"
+    "vue-router": "^4.5.1",
+    "yup": "^1.7.1"
   },
   "devDependencies": {
     "@types/next": "^8.0.7",
