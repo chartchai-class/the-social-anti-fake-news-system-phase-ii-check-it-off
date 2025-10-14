@@ -1,8 +1,104 @@
 <template>
   <div class="w-[900px] min-h-[1000px] font-[Outfit] p-10 mx-auto">
+    <!-- ✅ Sidebar -->
+    <aside
+      class="fixed top-0 left-0 w-[60px] h-full z-20 flex flex-col items-center justify-between py-6 border-r border-gray-200 bg-white"
+    >
+      <div class="flex flex-col items-center space-y-4">
+        <!-- Avatar -->
+        <div
+          class="w-10 h-10 rounded-full bg-[#5AC5F0] text-white flex items-center justify-center text-xl font-bold"
+          :title="user?.name"
+        >
+          {{ firstLetter }}
+        </div>
+
+        <!-- Access Circle -->
+        <div
+          :class="[
+            'w-10 h-10 rounded-full border border-gray-300 -mt-1',
+            accessColor,
+          ]"
+        ></div>
+
+        <!-- Access Label -->
+        <p
+          class="text-[11px] font-semibold text-gray-600 text-center w-[60px] leading-tight break-words -mt-3"
+        >
+          {{ user?.access || 'Unknown' }}
+        </p>
+
+        <!-- Member Add News -->
+        <div
+          v-if="user?.access?.toLowerCase().includes('member')"
+          class="flex flex-col items-center space-y-1 mt-20"
+        >
+          <button
+            class="w-10 h-10 rounded-full overflow-hidden shadow-md hover:scale-110 transition-transform duration-200 flex items-center justify-center bg-[#00005F]"
+            title="Member Panel"
+          >
+            <img
+              src="@/assets/Aside/add-news.png"
+              alt="Add News"
+              class="w-7 h-7 object-contain"
+            />
+          </button>
+          <p class="text-[12px] font-semibold text-center w-[60px] leading-tight">
+            Add News
+          </p>
+        </div>
+
+        <!-- ✅ Admin -->
+        <div
+          v-if="user?.access?.toLowerCase().includes('admin')"
+          class="flex flex-col items-center space-y-2 mt-20"
+        >
+          <div
+            v-for="btn in adminButtons"
+            :key="btn.label"
+            class="flex flex-col items-center"
+          >
+            <button
+              :title="btn.title"
+              @click="btn.action"
+              :class="[
+                'w-10 h-10 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-md hover:scale-110 transition-transform duration-200',
+                btn.colorClass,
+              ]"
+            >
+              <img
+                :src="btn.icon"
+                :alt="btn.label"
+                class="w-6 h-6 object-contain"
+              />
+            </button>
+            <p
+              class="text-[11px] font-semibold text-gray-600 text-center w-[60px] leading-tight mt-2"
+            >
+              {{ btn.label }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logout -->
+      <button
+        @click="handleLogout"
+        class="flex flex-col items-center space-y-1 text-gray-500 hover:text-red-500 transition-all duration-300"
+      >
+        <img
+          src="@/assets/Aside/logout-icon.png"
+          alt="Logout"
+          class="w-7 h-7 opacity-80 hover:opacity-100"
+        />
+        <span class="text-[11px] font-semibold">Logout</span>
+      </button>
+    </aside>
+
+    <!-- ✅ Back button -->
     <router-link
       :to="`/news/${id}`"
-      class="flex items-center gap-[6px] bg-gray-100 text-black text-[16px] rounded-[8px] px-[20px] py-[10px] max-w-fit cursor-pointer transition-colors duration-300 ease-in-out hover:bg-gray-300 hover:text-black no-underline"
+      class="flex items-center gap-[6px] bg-gray-100 text-black text-[16px] rounded-[8px] px-[20px] py-[10px] max-w-fit cursor-pointer transition-colors duration-300 ease-in-out hover:bg-gray-300 hover:text-black no-underline ml-[80px]"
     >
       <img
         src="@/assets/Card/Back.png"
@@ -12,56 +108,15 @@
       Back to News Detail
     </router-link>
 
-    <aside
-        class="fixed top-0 left-0 w-[60px] h-full z-20 flex flex-col items-center justify-between py-6 border-r border-gray-200 bg-white"
-      >
-        <div class="flex flex-col items-center space-y-4">
-          <!-- Avatar -->
-          <div
-            class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center text-xl font-bold"
-            :title="user?.name"
-          >
-            {{ firstLetter }}
-          </div>
-
-          <!-- Access Circle -->
-          <div
-            :class="[
-              'w-10 h-10 rounded-full border border-gray-300',
-              accessColor,
-            ]"
-          ></div>
-
-          <!-- Access Label -->
-          <p
-            class="text-[11px] font-semibold text-gray-600 text-center w-[60px] leading-tight break-words -mt-3"
-          >
-            {{ user?.access || "Unknown" }}
-          </p>
-        </div>
-
-        <button
-          @click="handleLogout"
-          class="flex flex-col items-center space-y-1 text-gray-500 hover:text-red-500 transition-all duration-300"
-        >
-          <img
-            src="@/assets/Aside/logout-icon.png"
-            alt="Logout"
-            class="w-7 h-7 opacity-80 hover:opacity-100"
-          />
-          <span class="text-[11px] font-semibold">Logout</span>
-        </button>
-      </aside>
-
+    <!-- ✅ News Stats -->
     <div
-      class="h-[170px] bg-white rounded-xl border border-[#d6d6d6] shadow-[0_3px_8px_rgba(0,0,0,0.08)] px-6 py-5 flex justify-between items-center w-full mt-2.5"
+      class="h-[170px] bg-white rounded-xl border border-[#d6d6d6] shadow-[0_3px_8px_rgba(0,0,0,0.08)] px-6 py-5 flex justify-between items-center w-full mt-2.5 ml-[80px]"
     >
       <div class="flex flex-col justify-center gap-[10px]">
         <h2 class="font-bold text-[25px] text-[#111827] m-0 p-0 mb-3">
           Government Launches New Education Reform Policy
         </h2>
         <div class="VoteInfo flex gap-6 text-[19px]">
-          <!-- Up Vote -->
           <div class="flex items-center gap-2">
             <img :src="LikeIcon" alt="Like" class="w-7 h-7" />
             <span class="text-gray-800 font-medium"
@@ -69,7 +124,6 @@
             >
           </div>
 
-          <!-- Down Vote -->
           <div class="flex items-center gap-2">
             <img :src="DislikeIcon" alt="Dislike" class="w-7 h-7" />
             <span class="text-gray-800 font-medium"
@@ -77,7 +131,6 @@
             >
           </div>
 
-          <!-- Comment -->
           <div class="flex items-center gap-2">
             <img :src="CommentIcon" alt="Comment" class="w-7 h-7" />
             <span class="text-gray-800 font-medium"
@@ -93,7 +146,9 @@
         Add Your Vote
       </router-link>
     </div>
-    <div class="w-[815px] my-10 mx-auto font-[Outfit]">
+
+    <!-- ✅ Comment Section -->
+    <div class="w-[815px] my-10 mx-auto font-[Outfit] ml-[80px]">
       <h1 class="text-[25px] font-bold mb-6 text-[#111827] text-left">
         Comments & Votes
       </h1>
@@ -114,9 +169,7 @@
           class="flex flex-col items-start justify-start text-left gap-4 bg-white rounded-xl py-5 w-full relative after:content-[''] after:block after:h-px after:bg-gray-300 after:w-full last:after:hidden"
         >
           <div class="flex items-center gap-3 w-full">
-            <span
-              class="font-[Outfit] font-semibold text-[18px] text-[#111827]"
-            >
+            <span class="font-[Outfit] font-semibold text-[18px] text-[#111827]">
               {{ c.name }}
             </span>
 
@@ -160,10 +213,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import LikeIcon from "@/assets/Card/Like.png";
 import DislikeIcon from "@/assets/Card/Dislike.png";
 import CommentIcon from "@/assets/Card/Comment.png";
+
+const router = useRouter();
 
 interface NewsItem {
   id: number;
@@ -226,7 +281,7 @@ onMounted(async () => {
   }
 });
 
-
+// ✅ Sidebar logic
 interface User {
   name: string;
   email: string;
@@ -249,10 +304,10 @@ const firstLetter = computed(() =>
 
 const accessColor = computed(() => {
   const access = user.value?.access?.toLowerCase() || "";
-  console.log("access =", access);
   if (access.includes("admin") || access.includes("full"))
-    return "bg-red-500 border-none";
-  if (access.includes("reader")) return "bg-yellow-400 border-none";
+    return "bg-[#D70000] border-none";
+  if (access.includes("member")) return "bg-[#27809A] border-none";
+  if (access.includes("reader")) return "bg-[#FFC800] border-none";
   return "bg-gray-300";
 });
 
@@ -261,4 +316,42 @@ function handleLogout() {
   alert("You have been logged out.");
   window.location.href = "/login";
 }
+
+const adminButtons = [
+  {
+    label: "Add News",
+    title: "Add new article",
+    icon: new URL("@/assets/Aside/add-news.png", import.meta.url).href,
+    colorClass: "bg-[#00005F]",
+    action: () => router.push("/admin/add-news"),
+  },
+  {
+    label: "Del News",
+    title: "Delete existing news",
+    icon: new URL("@/assets/Aside/delete-news.png", import.meta.url).href,
+    colorClass: "bg-[#5AC5F0]",
+    action: () => router.push("/admin/delete-news"),
+  },
+  {
+    label: "Del User",
+    title: "Delete user",
+    icon: new URL("@/assets/Aside/delete-user.png", import.meta.url).href,
+    colorClass: "bg-[#D70000]",
+    action: () => router.push("/admin/delete-user"),
+  },
+  {
+    label: "Del Comment",
+    title: "Delete comment",
+    icon: new URL("@/assets/Aside/delete-comment.png", import.meta.url).href,
+    colorClass: "bg-[#FF7801]",
+    action: () => router.push("/admin/delete-comment"),
+  },
+  {
+    label: "Change Role",
+    title: "Change role",
+    icon: new URL("@/assets/Aside/change-user-role.png", import.meta.url).href,
+    colorClass: "bg-[#FFC800]",
+    action: () => router.push("/admin/change-role"),
+  },
+];
 </script>

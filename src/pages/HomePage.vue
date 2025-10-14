@@ -3,6 +3,9 @@ import { ref, computed, onMounted, watch } from "vue";
 import Header from "../components/Header.vue";
 import NewsList from "../components/NewsList.vue";
 import Footer from "../components/Footer.vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const buttons = ["All News", "Verified", "Fake News", "Under Review"];
 const activeIndex = ref(0);
@@ -73,8 +76,9 @@ const accessColor = computed(() => {
   const access = user.value?.access?.toLowerCase() || "";
   console.log("access =", access);
   if (access.includes("admin") || access.includes("full"))
-    return "bg-red-500 border-none";
-  if (access.includes("reader")) return "bg-yellow-400 border-none";
+    return "bg-[#D70000] border-none";
+  if (access.includes("member")) return "bg-[#27809A] border-none";
+  if (access.includes("reader")) return "bg-[#FFC800] border-none";
   return "bg-gray-300";
 });
 
@@ -91,6 +95,45 @@ onMounted(() => {
     isLoading.value = false;
   }, 2000);
 });
+
+const adminButtons = [
+  {
+    label: "Add News",
+    title: "Add new article",
+    icon: new URL("@/assets/Aside/add-news.png", import.meta.url).href,
+    colorClass: "bg-[#00005F] text-[#6B2E2E]",
+    action: () => router.push("/admin/add-news"),
+  },
+  {
+    label: "Del News",
+    title: "Delete existing news",
+    icon: new URL("@/assets/Aside/delete-news.png", import.meta.url).href,
+   colorClass: "bg-[#5AC5F0] text-[#6B2E2E]",
+    action: () => router.push("/admin/delete-news"),
+  },
+  {
+    label: "Del User",
+    title: "Delete a user account",
+    icon: new URL("@/assets/Aside/delete-user.png", import.meta.url).href,
+    colorClass: "bg-[#D70000] text-[#6B2E2E]",
+    action: () => router.push("/admin/delete-user"),
+  },
+  {
+    label: "Del Comment",
+    title: "Delete comment",
+    icon: new URL("@/assets/Aside/delete-comment.png", import.meta.url).href,
+    colorClass: "bg-[#FF7801] text-[#6B2E2E]",
+    action: () => router.push("/admin/delete-comment"),
+  },
+  {
+    label: "Change Role",
+    title: "Change user role",
+    icon: new URL("@/assets/Aside/change-user-role.png", import.meta.url).href,
+    colorClass: "bg-[#FFC800] text-[#6B2E2E]",
+    action: () => router.push("/admin/change-role"),
+  },
+];
+
 </script>
 
 <template>
@@ -101,11 +144,10 @@ onMounted(() => {
     <aside
       class="fixed top-0 left-0 w-[60px] h-full z-20 flex flex-col items-center justify-between py-6 border-r border-gray-200 bg-white"
     >
-      <!-- 🔹 ส่วนบน: Avatar + สถานะ -->
       <div class="flex flex-col items-center space-y-4">
         <!-- Avatar -->
         <div
-          class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center text-xl font-bold"
+          class="w-10 h-10 rounded-full bg-[#5AC5F0] text-white flex items-center justify-center text-xl font-bold"
           :title="user?.name"
         >
           {{ firstLetter }}
@@ -114,7 +156,7 @@ onMounted(() => {
         <!-- Access Circle -->
         <div
           :class="[
-            'w-10 h-10 rounded-full border border-gray-300',
+            'w-10 h-10 rounded-full border border-gray-300 -mt-1',
             accessColor,
           ]"
         ></div>
@@ -125,9 +167,63 @@ onMounted(() => {
         >
           {{ user?.access || "Unknown" }}
         </p>
+
+        <!-- Member Add news -->
+        <div
+          v-if="user?.access?.toLowerCase().includes('member')"
+          class="flex flex-col items-center space-y-1 mt-20"
+        >
+          <button
+            class="w-10 h-10 rounded-full overflow-hidden shadow-md hover:scale-110 transition-transform duration-200 flex items-center justify-center bg-[#00005F] text-[#6B2E2E]"
+            title="Member Panel"
+          >
+            <img
+              src="@/assets/Aside/add-news.png"
+              alt="Contributor Icon"
+              class="w-7 h-7 object-contain"
+            />
+          </button>
+          <p
+            class="text-[12px] font-semibold  text-center w-[60px] leading-tight"
+          >
+            Add News
+          </p>
+        </div>
+
+        <!-- ✅ Admin -->
+        <div
+          v-if="user?.access?.toLowerCase().includes('admin')"
+          class="flex flex-col items-center space-y-2 mt-20"
+        >
+          <div
+            v-for="btn in adminButtons"
+            :key="btn.label"
+            class="flex flex-col items-center"
+          >
+            <button
+              :title="btn.title"
+              @click="btn.action"
+              :class="[
+                'w-10 h-10 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-md hover:scale-110 transition-transform duration-200',
+                btn.colorClass,
+              ]"
+            >
+              <img
+                :src="btn.icon"
+                :alt="btn.label"
+                class="w-6 h-6 object-contain"
+              />
+            </button>
+
+            <p
+              class="text-[11px] font-semibold text-gray-600 text-center w-[60px] leading-tight mt-2"
+            >
+              {{ btn.label }}
+            </p>
+          </div>
+        </div>
       </div>
 
-      <!-- 🔸 ส่วนล่าง: Logout -->
       <button
         @click="handleLogout"
         class="flex flex-col items-center space-y-1 text-gray-500 hover:text-red-500 transition-all duration-300"
