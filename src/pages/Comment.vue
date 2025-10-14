@@ -15,7 +15,6 @@
     <aside
         class="fixed top-0 left-0 w-[60px] h-full z-20 flex flex-col items-center justify-between py-6 border-r border-gray-200 bg-white"
       >
-        <!-- 🔹 ส่วนบน: Avatar + สถานะ -->
         <div class="flex flex-col items-center space-y-4">
           <!-- Avatar -->
           <div
@@ -41,7 +40,6 @@
           </p>
         </div>
 
-        <!-- 🔸 ส่วนล่าง: Logout -->
         <button
           @click="handleLogout"
           class="flex flex-col items-center space-y-1 text-gray-500 hover:text-red-500 transition-all duration-300"
@@ -115,7 +113,6 @@
           :key="c.name"
           class="flex flex-col items-start justify-start text-left gap-4 bg-white rounded-xl py-5 w-full relative after:content-[''] after:block after:h-px after:bg-gray-300 after:w-full last:after:hidden"
         >
-          <!-- ชื่อผู้เขียน + แท็กสถานะ -->
           <div class="flex items-center gap-3 w-full">
             <span
               class="font-[Outfit] font-semibold text-[18px] text-[#111827]"
@@ -143,14 +140,12 @@
             </span>
           </div>
 
-          <!-- ข้อความคอมเมนต์ -->
           <p
             class="font-[Outfit] text-gray-700 text-[16px] leading-relaxed w-full"
           >
             {{ c.comment }}
           </p>
 
-          <!-- รูปภาพ (ถ้ามี) -->
           <img
             v-if="c.imageUrl"
             :src="c.imageUrl"
@@ -256,8 +251,8 @@ const accessColor = computed(() => {
   const access = user.value?.access?.toLowerCase() || "";
   console.log("access =", access);
   if (access.includes("admin") || access.includes("full"))
-    return "bg-red-500 border-none"; // Admin
-  if (access.includes("vote")) return "bg-yellow-400 border-none"; // Vote only
+    return "bg-red-500 border-none";
+  if (access.includes("reader")) return "bg-yellow-400 border-none";
   return "bg-gray-300";
 });
 
