@@ -1,6 +1,6 @@
 <template>
   <footer
-    class="ml-[50px] w-[calc(120%-50px)] bg-gradient-to-tr from-blue-500/70 via-blue-500/50 via-green-500/70 to-green-300/70 px-8 py-7 rounded-[30px] text-white font-[Outfit] shadow-[0_-2px_10px_rgba(0,0,0,0.15)] mt-12 text-center"
+    class="ml-[50px] w-[calc(120%-50px)] bg-gradient-to-tr from-blue-500/70 via-blue-500/50 via-green-500/70 to-green-300/70 px-8 py-7 rounded-[30px] text-white font-[Outfit] shadow-[0_-2px_10px_rgba(0,0,0,0.15)] mt-3 text-center"
   >
     <div class="flex flex-wrap justify-between items-center text-center gap-4">
       <div class="flex-1">

@@ -7,6 +7,7 @@ import Footer from "../components/Footer.vue";
 const buttons = ["All News", "Verified", "Fake News", "Under Review"];
 const activeIndex = ref(0);
 const itemsPerPage = ref(6);
+
 const isLoading = ref(true);
 
 const allNews = ref(
@@ -21,12 +22,6 @@ const allNews = ref(
 function setActive(index: number) {
   activeIndex.value = index;
 }
-
-onMounted(() => {
-  setTimeout(() => {
-    isLoading.value = false;
-  }, 1000);
-});
 
 const filteredNews = computed(() => {
   const filter = buttons[activeIndex.value];
@@ -88,6 +83,14 @@ function handleLogout() {
   alert("You have been logged out.");
   window.location.href = "/login";
 }
+
+onMounted(() => {
+  isLoading.value = true;
+
+  setTimeout(() => {
+    isLoading.value = false;
+  }, 2000);
+});
 </script>
 
 <template>
@@ -173,17 +176,7 @@ function handleLogout() {
     <div
       class="flex flex-1 min-w-[1200px] min-h-[600px] items-center justify-center"
     >
-      <div
-        v-if="isLoading"
-        class="flex flex-col items-center justify-center text-center text-[#555]"
-      >
-        <div
-          class="w-[60px] h-[60px] border-[6px] border-gray-200 border-t-[#2563eb] rounded-full animate-spin mb-4"
-        ></div>
-        <p>Loading news...</p>
-      </div>
-
-      <div v-else>
+      <div>
         <NewsList
           :filterIndex="activeIndex"
           :itemsPerPage="visibleItems"
@@ -192,9 +185,14 @@ function handleLogout() {
       </div>
     </div>
 
-    <div class="flex justify-center my-6">
+    <div class="flex justify-center my-6 ml-13">
+      <div
+        v-if="isLoading"
+        class="w-[150px] h-[42px] bg-gray-200 rounded-md animate-pulse"
+      ></div>
+
       <button
-        v-if="visibleItems < filteredNews.length"
+        v-else-if="visibleItems < filteredNews.length"
         @click="loadMore"
         class="px-6 py-2 !bg-blue-500 !text-white rounded-md hover:!bg-blue-600 transition font-[Outfit]"
       >
@@ -202,6 +200,10 @@ function handleLogout() {
       </button>
     </div>
 
-    <Footer />
+    <div
+      v-if="isLoading"
+      class="w-full h-[100px] bg-gray-100 animate-pulse"
+    ></div>
+    <Footer v-else />
   </div>
 </template>
