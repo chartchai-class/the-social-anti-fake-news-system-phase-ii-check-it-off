@@ -1,6 +1,6 @@
 <template>
   <header
-    class="w-[120%] text-center p-6 rounded-lg shadow-md bg-gradient-to-r from-blue-200 via-blue-100 to-green-100"
+    class="ml-[50px] w-[calc(120%-50px)] text-center p-6 rounded-lg shadow-md bg-gradient-to-r from-blue-200 via-blue-100 to-green-100"
   >
     <h1 class="text-7xl font-bold mt-4 text-[#3380f2] font-[Outfit]">
       Check It Off

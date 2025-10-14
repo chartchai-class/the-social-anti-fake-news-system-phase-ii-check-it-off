@@ -56,12 +56,18 @@ function loadMore() {
 </script>
 
 <template>
-  <div id="app" class="flex flex-col min-h-screen bg-white font-[Outfit]">
+
+  <div id="app" class="flex flex-col min-h-screen bg-white font-[Outfit] relative">
+
+    <aside
+      class="fixed top-0 left-0 w-[50px] h-full z-20 flex flex-col items-center py-4 space-y-6 border-r border-gray-200"
+    >
+    </aside>
 
     <Header />
 
     <div
-      class="w-[125%] flex justify-between items-center gap-6 px-8 py-4 rounded-xl flex-wrap mb-[-15px]"
+      class="ml-[50px] w-[calc(125%-50px)] flex justify-between items-center gap-6 px-8 py-4 rounded-xl flex-wrap mb-[-15px]"
     >
       <div class="flex flex-wrap gap-3">
         <button
