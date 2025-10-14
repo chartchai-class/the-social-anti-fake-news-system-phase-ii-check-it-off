@@ -8,6 +8,8 @@ import LikeIcon from "@/assets/Card/Like.png";
 import DisLikeIcon from "@/assets/Card/Dislike.png";
 import CommentIcon from "@/assets/Card/Comment.png";
 
+import AsideMenu from "@/components/AsideMenu.vue"; // ✅ ใช้ component จริง
+
 interface NewsItem {
   id: number;
   title: string;
@@ -39,6 +41,7 @@ const news = ref<NewsItem>({
   contentLines: ["Loading content..."],
 });
 
+// ✅ ดึงข่าวจาก API
 onMounted(async () => {
   try {
     const res = await fetch("http://localhost:5175/api/news");
@@ -72,14 +75,14 @@ onMounted(async () => {
   }
 });
 
-// โหลดรูปจากโฟลเดอร์
+// ✅ โหลดรูปจากโฟลเดอร์
 const images = import.meta.glob("@/assets/NewsImages/*.png", { eager: true });
 function getImageById(id: number) {
   const path = `/src/assets/NewsImages/${id}.png`;
   return (images[path] as any)?.default || "";
 }
 
-// ปุ่ม
+// ✅ ปุ่มนำทาง
 function goToVote() {
   router.push({ name: "Vote", params: { id: newsId } });
 }
@@ -87,7 +90,7 @@ function goToComment() {
   router.push({ name: "Comment", params: { id: newsId } });
 }
 
-// -------------------- Sidebar Logic --------------------
+// ✅ จัดการผู้ใช้
 interface User {
   name: string;
   email: string;
@@ -103,53 +106,8 @@ onMounted(() => {
   }
 });
 
-const firstLetter = computed(() =>
-  user.value?.name ? user.value.name.charAt(0).toUpperCase() : "?"
-);
-
-const accessColor = computed(() => {
-  const access = user.value?.access?.toLowerCase() || "";
-  if (access.includes("admin") || access.includes("full"))
-    return "bg-[#D70000] border-none";
-  if (access.includes("member")) return "bg-[#27809A] border-none";
-  if (access.includes("reader")) return "bg-[#FFC800] border-none";
-  return "bg-gray-300";
-});
-
-const adminButtons = [
-  {
-    label: "Del News",
-    title: "Delete existing news",
-    icon: new URL("@/assets/Aside/delete-news.png", import.meta.url).href,
-    colorClass: "bg-[#5AC5F0]",
-    action: () => router.push("/admin/delete-news"),
-  },
-  {
-    label: "Del User",
-    title: "Delete a user account",
-    icon: new URL("@/assets/Aside/delete-user.png", import.meta.url).href,
-    colorClass: "bg-[#D70000]",
-    action: () => router.push("/admin/delete-user"),
-  },
-  {
-    label: "Del Comment",
-    title: "Delete comment",
-    icon: new URL("@/assets/Aside/delete-comment.png", import.meta.url).href,
-    colorClass: "bg-[#FF7801]",
-    action: () => router.push("/admin/delete-comment"),
-  },
-  {
-    label: "Change Role",
-    title: "Change user role",
-    icon: new URL("@/assets/Aside/change-user-role.png", import.meta.url).href,
-    colorClass: "bg-[#FFC800]",
-    action: () => router.push("/admin/change-role"),
-  },
-];
-
-// -------------------- Add News Logic --------------------
+// ✅ Modal เพิ่มข่าว
 const showAddNewsModal = ref(false);
-
 const newNews = ref({
   title: "",
   author: "",
@@ -189,203 +147,117 @@ function saveNews() {
 </script>
 
 <template>
-  <div class="w-[900px] mx-auto justify-center pb-[40px] font-[Outfit]">
-    <!-- Sidebar -->
-    <aside
-      class="fixed top-0 left-0 w-[60px] h-full z-20 flex flex-col items-center justify-between py-6 border-r border-gray-200 bg-white"
-    >
-      <div class="flex flex-col items-center space-y-4">
-        <!-- Avatar -->
-        <div
-          class="w-10 h-10 rounded-full bg-[#5AC5F0] text-white flex items-center justify-center text-xl font-bold"
-          :title="user?.name"
-        >
-          {{ firstLetter }}
-        </div>
+  <div class="flex min-h-screen font-[Outfit] bg-white">
+    <!-- ✅ ใช้ AsideMenu.vue -->
+    <AsideMenu :user="user" @openAddNews="openAddNewsModal" />
 
-        <!-- Access Circle -->
+    <!-- ✅ Main Content -->
+    <div class="flex-1 ml-[80px] px-8 py-6">
+      <!-- ✅ Loading Spinner -->
+      <div
+        v-if="isLoading"
+        class="fixed inset-0 bg-white/95 flex flex-col items-center justify-center z-[9999] text-center text-[18px] text-[#333]"
+      >
         <div
-          :class="[
-            'w-10 h-10 rounded-full border border-gray-300 -mt-1',
-            accessColor,
-          ]"
+          class="w-[60px] h-[60px] border-[6px] border-gray-200 border-t-[#003791] rounded-full animate-spin mb-[15px]"
         ></div>
+        <p>Loading news...</p>
+      </div>
 
-        <!-- Access Label -->
-        <p
-          class="text-[11px] font-semibold text-gray-600 text-center w-[60px] leading-tight break-words -mt-3"
+      <!-- ✅ Main Content -->
+      <div v-else>
+        <router-link
+          to="/"
+          class="flex items-center gap-[6px] bg-gray-100 text-black text-[16px] rounded-[8px] px-[20px] py-[10px] max-w-fit cursor-pointer transition-colors duration-300 hover:bg-gray-300"
         >
-          {{ user?.access || "Unknown" }}
-        </p>
+          <img
+            src="@/assets/Card/Back.png"
+            alt="Back Icon"
+            class="w-[20px] h-[20px] mr-[5px]"
+          />
+          Back to News List
+        </router-link>
 
-        <!-- Add News Button (Member & Admin) -->
         <div
-          v-if="
-            user?.access?.toLowerCase().includes('member') ||
-            user?.access?.toLowerCase().includes('admin')
-          "
-          class="flex flex-col items-center space-y-1 mt-20"
+          class="text-black mt-[10px] bg-white border border-gray-300 rounded-[8px] shadow-[0_4px_10px_rgba(0,0,0,0.15)] min-h-[650px] text-left p-[20px]"
         >
-          <button
-            @click="openAddNewsModal"
-            class="w-10 h-10 rounded-full overflow-hidden shadow-md hover:scale-110 transition-transform duration-200 flex items-center justify-center bg-[#00005F]"
-            title="Add News"
-          >
+          <h1 class="text-4xl font-bold mb-2 ml-[20px]">{{ news.title }}</h1>
+
+          <!-- Info -->
+          <div class="flex items-center gap-[12px] ml-[20px] mt-5">
+            <span
+              class="inline-flex items-center justify-center text-[17px] px-2 py-1 rounded-[6px] font-medium"
+              :class="{
+                'bg-green-100 text-green-700': news.stats === 'Verified',
+                'bg-red-100 text-red-700': news.stats === 'Fake News',
+                'bg-yellow-100 text-yellow-700':
+                  news.stats === 'Under Review' || news.stats === 'Unverified',
+              }"
+            >
+              {{ news.stats }}
+            </span>
+
+            <span class="inline-flex items-center text-gray-600">
+              <img :src="AuthorIcon" alt="Author" class="w-[20px] h-[20px] mx-2" />
+              By {{ news.author }}
+            </span>
+
+            <span class="inline-flex items-center text-gray-600">
+              <img :src="DateIcon" alt="Date" class="w-[20px] h-[20px] mx-2" />
+              {{ news.date }}
+            </span>
+          </div>
+
+          <!-- Votes -->
+          <div class="flex gap-[12px] mt-[15px] ml-[20px]">
+            <span class="inline-flex items-center gap-[6px] font-medium bg-green-50 rounded-[6px] px-3 py-1">
+              <img :src="LikeIcon" class="w-5 h-5" /> {{ news.upVotes }}
+            </span>
+            <span class="inline-flex items-center gap-[6px] font-medium bg-red-50 rounded-[6px] px-3 py-1">
+              <img :src="DisLikeIcon" class="w-5 h-5" /> {{ news.downVotes }}
+            </span>
+            <span class="inline-flex items-center gap-[6px] font-medium bg-gray-100 rounded-[6px] px-3 py-1">
+              <img :src="CommentIcon" class="w-5 h-5" /> {{ news.comments }} Comments
+            </span>
+          </div>
+
+          <!-- Image -->
+          <div class="w-full flex justify-center my-[15px]" v-if="getImageById(news.id)">
             <img
-              src='@/assets/Aside/add-news.png'
-              alt="Add News Icon"
-              class="w-7 h-7 object-contain"
+              :src="getImageById(news.id)"
+              alt="News Image"
+              class="w-[820px] max-h-[270px] object-cover rounded-[6px] shadow"
             />
-          </button>
-          <p
-            class="text-[12px] font-semibold text-center w-[60px] leading-tight"
-          >
-            Add News
-          </p>
-        </div>
+          </div>
 
-        <!-- Admin -->
-        <div
-          v-if="user?.access?.toLowerCase().includes('admin')"
-          class="flex flex-col items-center space-y-2 mt-20"
-        >
-          <div
-            v-for="btn in adminButtons"
-            :key="btn.label"
-            class="flex flex-col items-center"
-          >
+          <!-- Description -->
+          <div class="text-[17px] w-[820px] mt-[20px] ml-[20px] mb-[20px] pb-[20px] border-b-2 border-gray-200">
+            {{ news.fulldescription }}
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex gap-[10px] ml-[20px] w-[820px]">
             <button
-              :title="btn.title"
-              @click="btn.action"
-              :class="[
-                'w-10 h-10 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-md hover:scale-110 transition-transform duration-200',
-                btn.colorClass,
-              ]"
+              @click="goToVote"
+              class="flex-1 px-4 py-2 rounded-[6px] text-[16px] bg-[#3B82F6] text-white hover:bg-[#2563EB]"
             >
-              <img
-                :src="btn.icon"
-                :alt="btn.label"
-                class="w-6 h-6 object-contain"
-              />
+              Vote on This News
             </button>
-
-            <p
-              class="text-[11px] font-semibold text-gray-600 text-center w-[60px] leading-tight mt-2"
+            <button
+              @click="goToComment"
+              class="flex-1 px-4 py-2 rounded-[6px] text-[16px] bg-gray-200 text-gray-900 hover:bg-gray-300"
             >
-              {{ btn.label }}
-            </p>
+              View More Comment
+            </button>
           </div>
         </div>
       </div>
-    </aside>
-
-    <!-- Loading -->
-    <div
-      v-if="isLoading"
-      class="fixed inset-0 bg-white/95 flex flex-col items-center justify-center z-[9999] text-center text-[18px] text-[#333]"
-    >
-      <div
-        class="w-[60px] h-[60px] border-[6px] border-gray-200 border-t-[#003791] rounded-full animate-spin mb-[15px]"
-      ></div>
-      <p>Loading news...</p>
     </div>
 
-    <!-- Main Content -->
-    <div v-else>
-      <router-link
-        to="/"
-        class="flex items-center gap-[6px] bg-gray-100 text-black text-[16px] rounded-[8px] px-[20px] py-[10px] max-w-fit cursor-pointer transition-colors duration-300 hover:bg-gray-300"
-      >
-        <img
-          src="@/assets/Card/Back.png"
-          alt="Back Icon"
-          class="w-[20px] h-[20px] mr-[5px]"
-        />
-        Back to News List
-      </router-link>
-
-      <div
-        class="text-black mt-[10px] bg-white border border-gray-300 rounded-[8px] shadow-[0_4px_10px_rgba(0,0,0,0.15)] min-h-[650px] text-left p-[20px]"
-      >
-        <h1 class="text-4xl font-bold mb-2 ml-[20px]">{{ news.title }}</h1>
-
-        <!-- Info -->
-        <div
-          class="flex items-center gap-[12px] ml-[20px] mt-5"
-        >
-          <span
-            class="inline-flex items-center justify-center text-[17px] px-2 py-1 rounded-[6px] font-medium"
-            :class="{
-              'bg-green-100 text-green-700': news.stats === 'Verified',
-              'bg-red-100 text-red-700': news.stats === 'Fake News',
-              'bg-yellow-100 text-yellow-700':
-                news.stats === 'Under Review' || news.stats === 'Unverified',
-            }"
-          >
-            {{ news.stats }}
-          </span>
-
-          <span class="inline-flex items-center text-gray-600">
-            <img :src="AuthorIcon" alt="Author" class="w-[20px] h-[20px] mx-2" />
-            By {{ news.author }}
-          </span>
-
-          <span class="inline-flex items-center text-gray-600">
-            <img :src="DateIcon" alt="Date" class="w-[20px] h-[20px] mx-2" />
-            {{ news.date }}
-          </span>
-        </div>
-
-        <!-- Votes -->
-        <div class="flex gap-[12px] mt-[15px] ml-[20px]">
-          <span class="inline-flex items-center gap-[6px] font-medium bg-green-50 rounded-[6px] px-3 py-1">
-            <img :src="LikeIcon" class="w-5 h-5" /> {{ news.upVotes }}
-          </span>
-          <span class="inline-flex items-center gap-[6px] font-medium bg-red-50 rounded-[6px] px-3 py-1">
-            <img :src="DisLikeIcon" class="w-5 h-5" /> {{ news.downVotes }}
-          </span>
-          <span class="inline-flex items-center gap-[6px] font-medium bg-gray-100 rounded-[6px] px-3 py-1">
-            <img :src="CommentIcon" class="w-5 h-5" /> {{ news.comments }} Comments
-          </span>
-        </div>
-
-        <!-- Image -->
-        <div class="w-full flex justify-center my-[15px]" v-if="getImageById(news.id)">
-          <img
-            :src="getImageById(news.id)"
-            alt="News Image"
-            class="w-[820px] max-h-[270px] object-cover rounded-[6px] shadow"
-          />
-        </div>
-
-        <!-- Description -->
-        <div class="text-[17px] w-[820px] mt-[20px] ml-[20px] mb-[20px] pb-[20px] border-b-2 border-gray-200">
-          {{ news.fulldescription }}
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="flex gap-[10px] ml-[20px] w-[820px]">
-          <button
-            @click="goToVote"
-            class="flex-1 px-4 py-2 rounded-[6px] text-[16px] bg-[#3B82F6] text-white hover:bg-[#2563EB]"
-          >
-            Vote on This News
-          </button>
-          <button
-            @click="goToComment"
-            class="flex-1 px-4 py-2 rounded-[6px] text-[16px] bg-gray-200 text-gray-900 hover:bg-gray-300"
-          >
-            View More Comment
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Add News Modal -->
+    <!-- ✅ Modal -->
     <div
       v-if="showAddNewsModal"
       class="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]"
-      @click.self="closeAddNewsModal"
     >
       <div
         class="bg-white w-[600px] h-[800px] rounded-2xl shadow-xl p-6 font-[Outfit] animate-fade-in overflow-y-auto"
@@ -396,9 +268,7 @@ function saveNews() {
 
         <div class="space-y-3">
           <div>
-            <label class="block text-xl text-gray-700 font-semibold mb-1"
-              >Title</label
-            >
+            <label class="block text-xl text-gray-700 font-semibold mb-1">Title</label>
             <input
               v-model="newNews.title"
               type="text"
@@ -408,9 +278,7 @@ function saveNews() {
           </div>
 
           <div>
-            <label class="block text-xl text-gray-700 font-semibold mb-1"
-              >Author</label
-            >
+            <label class="block text-xl text-gray-700 font-semibold mb-1">Author</label>
             <input
               v-model="newNews.author"
               type="text"
@@ -421,10 +289,7 @@ function saveNews() {
           </div>
 
           <div class="flex flex-col items-center">
-            <label
-              class="block text-gray-700 font-semibold mb-1 text-center text-xl"
-              >Date</label
-            >
+            <label class="block text-gray-700 font-semibold mb-1 text-center text-xl">Date</label>
             <input
               v-model="newNews.date"
               type="date"
@@ -433,9 +298,7 @@ function saveNews() {
           </div>
 
           <div>
-            <label class="block text-gray-700 font-semibold mb-1 text-xl"
-              >Image URL</label
-            >
+            <label class="block text-gray-700 font-semibold mb-1 text-xl">Image URL</label>
             <input
               v-model="newNews.image"
               type="text"
@@ -445,9 +308,7 @@ function saveNews() {
           </div>
 
           <div>
-            <label class="block text-gray-700 font-semibold mb-1 text-xl"
-              >Full Description</label
-            >
+            <label class="block text-gray-700 font-semibold mb-1 text-xl">Full Description</label>
             <textarea
               v-model="newNews.description"
               rows="4"
