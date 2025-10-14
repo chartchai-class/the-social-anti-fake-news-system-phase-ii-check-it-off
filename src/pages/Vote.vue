@@ -110,8 +110,8 @@ const accessColor = computed(() => {
   const access = user.value?.access?.toLowerCase() || "";
   console.log("access =", access);
   if (access.includes("admin") || access.includes("full"))
-    return "bg-red-500 border-none"; // Admin
-  if (access.includes("vote")) return "bg-yellow-400 border-none"; // Vote only
+    return "bg-red-500 border-none";
+  if (access.includes("reader")) return "bg-yellow-400 border-none";
   return "bg-gray-300";
 });
 
@@ -138,7 +138,6 @@ function handleLogout() {
       <aside
         class="fixed top-0 left-0 w-[60px] h-full z-20 flex flex-col items-center justify-between py-6 border-r border-gray-200 bg-white"
       >
-        <!-- 🔹 ส่วนบน: Avatar + สถานะ -->
         <div class="flex flex-col items-center space-y-4">
           <!-- Avatar -->
           <div
@@ -164,7 +163,6 @@ function handleLogout() {
           </p>
         </div>
 
-        <!-- 🔸 ส่วนล่าง: Logout -->
         <button
           @click="handleLogout"
           class="flex flex-col items-center space-y-1 text-gray-500 hover:text-red-500 transition-all duration-300"

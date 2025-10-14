@@ -112,7 +112,7 @@ const accessColor = computed(() => {
   console.log("access =", access);
   if (access.includes("admin") || access.includes("full"))
     return "bg-red-500 border-none"; // Admin
-  if (access.includes("vote")) return "bg-yellow-400 border-none"; // Vote only
+  if (access.includes("reader")) return "bg-yellow-400 border-none"; // Vote only
   return "bg-gray-300";
 });
 
@@ -164,7 +164,6 @@ function handleLogout() {
           </p>
         </div>
 
-        <!-- 🔸 ส่วนล่าง: Logout -->
         <button
           @click="handleLogout"
           class="flex flex-col items-center space-y-1 text-gray-500 hover:text-red-500 transition-all duration-300"
