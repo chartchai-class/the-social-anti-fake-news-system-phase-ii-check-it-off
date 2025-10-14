@@ -284,7 +284,7 @@ function clearError(field) {
 
 const signUpSchema = yup.object({
   name: yup.string().required("Please enter your name"),
-  surname: yup.string().required("Please enter your surname"), // ✅ เพิ่ม validation
+  surname: yup.string().required("Please enter your surname"),
   email: yup
     .string()
     .email("Invalid email format")
@@ -299,10 +299,11 @@ const loginSchema = yup.object({
   loginEmail: yup
     .string()
     .email("Invalid email format")
-    .required("Please enter your email"),
-  loginPassword: yup.string().required("Please enter your password"),
+    .required(" Please enter your email"),
+  loginPassword: yup.string().required(" Please enter your password"),
 });
 
+//  สมัครสมาชิก
 async function handleCreateAccount() {
   try {
     errors.value = {};
@@ -331,7 +332,7 @@ async function handleCreateAccount() {
     const result = await response.json();
 
     if (response.ok) {
-      alert(`Your account is ready. Let's get started!`);
+      alert(`🎉 Your account is ready. Let's get started!`);
       isSignUp.value = false;
 
       name.value = "";
@@ -339,14 +340,16 @@ async function handleCreateAccount() {
       email.value = "";
       password.value = "";
     } else {
-      alert(`❌ Failed to register: ${result.message || "Unknown error"}`);
+      alert(
+        ` Failed to register: ${result.message || "Unexpected issue occurred."}`
+      );
     }
   } catch (err) {
     if (err.inner) {
       err.inner.forEach((e) => (errors.value[e.path] = e.message));
     } else {
-      console.error("Error:", err);
-      alert("❌ Something went wrong.");
+      console.error(" Server Error:", err);
+      alert("We’re having trouble connecting. Please try again later.");
     }
   }
 }
@@ -370,25 +373,33 @@ async function handleLogin() {
     });
 
     const text = await response.text();
-    console.log("📩 Raw response:", text);
+    console.log("Raw response:", text);
 
     let result;
     try {
       result = JSON.parse(text);
     } catch {
-      throw new Error("❌ Server response is not JSON");
+      throw new Error("Server response is not JSON");
     }
 
     if (response.ok) {
-      alert(`✅ Welcome back, ${result.name || "User"}!`);
+      alert(
+        `🌟 Welcome, ${result.name || "User"}! You’ve logged in successfully.`
+      );
       localStorage.setItem("user", JSON.stringify(result));
       window.location.href = "/";
     } else {
-      alert(result.message || "❌ Invalid email or password");
+      alert(result.message || " Invalid email or password");
     }
   } catch (err) {
-    console.error("❌ Error in handleLogin:", err);
-    alert("❌ Something went wrong.");
+    if (err.inner) {
+      err.inner.forEach((e) => (errors.value[e.path] = e.message));
+    } else {
+      console.error(" Unexpected Error:", err);
+      alert(
+        "Unable to log in right now. Please check your connection and try again."
+      );
+    }
   }
 }
 </script>
