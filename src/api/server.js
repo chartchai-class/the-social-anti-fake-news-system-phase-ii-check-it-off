@@ -6,24 +6,27 @@ import cors from "cors";
 const app = express();
 const port = 5175;
 
-app.use(cors()); // allow cross-origin requests
-app.use(express.json()); // parse JSON body
+app.use(cors());
+app.use(express.json());
+app.use(express.text());
+app.use(express.urlencoded({ extended: true }));
 
-// ✅ Google Sheet Info
+// Google Sheet Info
 const SPREADSHEET_ID = "1xXd_djAF1jp7c5jrY-mzAwVYxSN9wbl_0RTpKKvH0AA";
 const SHEET_NAME = "Sheet1";
 
-// ✅ Auth (must have write permission)
+// Auth (must have write permission)
 const auth = new google.auth.GoogleAuth({
-  keyFile: path.join(process.cwd(), "secret/newsdatabaseproject-f6c77e6cf130.json"),
-  scopes: ["https://www.googleapis.com/auth/spreadsheets"], // ✅ full read/write scope
+  keyFile: path.join(
+    process.cwd(),
+    "secret/newsdatabaseproject-f6c77e6cf130.json"
+  ),
+  scopes: ["https://www.googleapis.com/auth/spreadsheets"], // full read/write scope
 });
 
 const sheets = google.sheets({ version: "v4", auth });
 
-// =============================
-// 📍 GET /api/news
-// =============================
+// GET /api/news
 app.get("/api/news", async (_req, res) => {
   try {
     const response = await sheets.spreadsheets.values.get({
@@ -71,9 +74,7 @@ app.get("/api/news", async (_req, res) => {
   }
 });
 
-// =============================
-// 📍 POST /api/vote
-// =============================
+// POST /api/vote
 app.post("/api/vote", async (req, res) => {
   const { id, name, status, comment, imageUrl } = req.body;
 
@@ -82,11 +83,7 @@ app.post("/api/vote", async (req, res) => {
   }
 
   const readableStatus =
-    status === "up"
-      ? "up"
-      : status === "down"
-      ? "down"
-      : status || "Unknown";
+    status === "up" ? "up" : status === "down" ? "down" : status || "Unknown";
 
   try {
     await sheets.spreadsheets.values.append({
@@ -128,10 +125,94 @@ app.get("/api/comments", async (_req, res) => {
   }
 });
 
+// POST /api/register
+app.post("/api/register", async (req, res) => {
+  try {
+    const { name, surname, email, password } = req.body;
 
-// =============================
-// 🚀 Start Server
-// =============================
+    if (!name || !surname || !email || !password) {
+      return res.status(400).json({ message: "❌ Missing required fields" });
+    }
+
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: "Sheet3!A:A",
+    });
+
+    const rows = response.data.values || [];
+    const newId = rows.length;
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: "Sheet3!A:H",
+      valueInputOption: "USER_ENTERED",
+      requestBody: {
+        values: [[newId, name, surname, email, password, "Vote only", 0, 0]],
+      },
+    });
+
+    res
+      .status(200)
+      .json({ message: "✅ Account created successfully", id: newId });
+  } catch (error) {
+    console.error("Error saving user:", error);
+    res
+      .status(500)
+      .json({ message: "❌ Failed to register user", error: error.message });
+  }
+});
+
+// POST /api/login
+app.post("/api/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    console.log("📩 [Login Request]", email, password);
+
+    if (!email || !password) {
+      return res.status(400).json({ message: "❌ Missing email or password" });
+    }
+
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: "Sheet3!A:H",
+    });
+
+    const rows = response.data.values || [];
+    console.log("📄 [Sheet3 Rows]", rows.length);
+    console.log("🧾 [First Row Example]", rows[1]);
+
+    const user = rows
+      .slice(1)
+      .find(
+        (row) =>
+          row[3]?.trim() &&
+          row[4]?.trim() === password.trim()
+      );
+
+    console.log("🔍 [Found User]", user || "❌ Not found");
+
+    if (!user) {
+      return res.status(401).json({ message: "❌ Invalid email or password" });
+    }
+
+    res.status(200).json({
+      message: "✅ You’ve successfully logged in",
+      id: user[0],
+      name: user[1],
+      surname: user[2],
+      email: user[3],
+      access: user[5],
+      voteCount: user[6],
+      newsCount: user[7],
+    });
+  } catch (error) {
+    console.error("❌ Error reading Google Sheets:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+
+// Start Server
 app.listen(port, () => {
   console.log(`✅ Server running at http://localhost:${port}`);
 });
