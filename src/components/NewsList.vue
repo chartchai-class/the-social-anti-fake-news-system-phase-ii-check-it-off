@@ -95,7 +95,7 @@ const paginatedNews = computed(() =>
 
 <template>
   <div
-    class="relative w-[125%] -left-[12.5%] font-[Outfit] py-4 px-8 box-border"
+    class="relative ml-[50px] w-[calc(125%-50px)] -left-[12.5%] font-[Outfit] py-4 px-8 box-border"
   >
     <p v-if="loading" class="text-center text-gray-500 mt-4">Loading news...</p>
     <p v-else-if="error" class="text-center text-red-500 mt-4">{{ error }}</p>
