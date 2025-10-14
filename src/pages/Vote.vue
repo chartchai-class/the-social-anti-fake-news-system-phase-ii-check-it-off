@@ -10,7 +10,6 @@ const id = Number(route.params.id);
 
 const isLoading = ref(true);
 const news = ref<any | null>(null);
-
 const isSubmitting = ref(false);
 
 const form = ref({
@@ -65,7 +64,7 @@ async function submitVote() {
     const data = await res.json();
 
     if (res.ok) {
-      alert("✅ Thank you for your vote! Your feedback has been recorded.");
+      alert(" Thank you for your vote! Your feedback has been recorded.");
       form.value = { name: "", vote: "", comment: "", imageUrl: "" };
       await fetchNewsById();
     } else {
@@ -111,13 +110,6 @@ const accessColor = computed(() => {
 
 const adminButtons = [
   {
-    label: "Add News",
-    title: "Add new article",
-    icon: new URL("@/assets/Aside/add-news.png", import.meta.url).href,
-    colorClass: "bg-[#00005F]",
-    action: () => router.push("/admin/add-news"),
-  },
-  {
     label: "Del News",
     title: "Delete existing news",
     icon: new URL("@/assets/Aside/delete-news.png", import.meta.url).href,
@@ -146,11 +138,51 @@ const adminButtons = [
     action: () => router.push("/admin/change-role"),
   },
 ];
+
+// -------------------- Add News Modal --------------------
+const showAddNewsModal = ref(false);
+
+const newNews = ref({
+  title: "",
+  author: "",
+  date: "",
+  image: "",
+  description: "",
+});
+
+function openAddNewsModal() {
+  showAddNewsModal.value = true;
+  newNews.value.author = user.value
+    ? `${user.value.name} ${user.value.surname || ""}`.trim()
+    : "";
+}
+
+function closeAddNewsModal() {
+  showAddNewsModal.value = false;
+  Object.assign(newNews.value, {
+    title: "",
+    author: "",
+    date: "",
+    image: "",
+    description: "",
+  });
+}
+
+function saveNews() {
+  if (!newNews.value.title || !newNews.value.author) {
+    alert("Please fill in at least Title and Author.");
+    return;
+  }
+
+  console.log("📰 New News Added:", newNews.value);
+  alert(" News added successfully!");
+  closeAddNewsModal();
+}
 </script>
 
 <template>
-  <div class="w-[800px] mx-auto justify-center pb-[40px]">
-    <!-- ✅ Sidebar -->
+  <div class="w-[800px] mx-auto justify-center pb-[40px] font-[Outfit]">
+    <!--  Sidebar -->
     <aside
       class="fixed top-0 left-0 w-[60px] h-full z-20 flex flex-col items-center justify-between py-6 border-r border-gray-200 bg-white"
     >
@@ -178,14 +210,18 @@ const adminButtons = [
           {{ user?.access || "Unknown" }}
         </p>
 
-        <!-- Member Add News -->
+        <!--  Add News Button -->
         <div
-          v-if="user?.access?.toLowerCase().includes('member')"
+          v-if="
+            user?.access?.toLowerCase().includes('member') ||
+            user?.access?.toLowerCase().includes('admin')
+          "
           class="flex flex-col items-center space-y-1 mt-20"
         >
           <button
+            @click="openAddNewsModal"
             class="w-10 h-10 rounded-full overflow-hidden shadow-md hover:scale-110 transition-transform duration-200 flex items-center justify-center bg-[#00005F]"
-            title="Member Panel"
+            title="Add News"
           >
             <img
               src="@/assets/Aside/add-news.png"
@@ -200,7 +236,7 @@ const adminButtons = [
           </p>
         </div>
 
-        <!-- ✅ Admin -->
+        <!--  Admin -->
         <div
           v-if="user?.access?.toLowerCase().includes('admin')"
           class="flex flex-col items-center space-y-2 mt-20"
@@ -232,10 +268,9 @@ const adminButtons = [
           </div>
         </div>
       </div>
-
     </aside>
 
-    <!-- ✅ Loading -->
+    <!--  Loading -->
     <div
       v-if="isLoading"
       class="fixed inset-0 bg-white/95 flex flex-col items-center justify-center z-[9999] text-[18px] text-[#333]"
@@ -246,16 +281,16 @@ const adminButtons = [
       <p>Loading news...</p>
     </div>
 
-    <!-- ✅ Main Vote Form -->
+    <!--  Main Vote Form -->
     <div v-else>
       <router-link
         :to="`/news/${id}`"
-        class="flex items-center gap-[6px] bg-gray-100 text-black text-[16px] rounded-[8px] px-[20px] py-[10px] max-w-fit cursor-pointer transition-colors duration-300 ease-in-out hover:bg-gray-300 hover:text-black no-underline"
+        class="flex items-center gap-[6px] bg-gray-100 text-black text-[16px] rounded-[8px] px-[20px] py-[10px] max-w-fit cursor-pointer transition-colors duration-300 hover:bg-gray-300 hover:text-black"
       >
         <img
           src="@/assets/Card/Back.png"
           alt="Back Icon"
-          class="w-[20px] h-[20px] mr-[5px] align-middle"
+          class="w-[20px] h-[20px] mr-[5px]"
         />
         Back to News Detail
       </router-link>
@@ -295,7 +330,7 @@ const adminButtons = [
           </div>
         </div>
 
-        <!-- ✅ Vote Form -->
+        <!--  Vote Form -->
         <div
           class="flex-1 bg-white border border-gray-300 rounded-[12px] p-[30px] shadow-md text-left"
         >
@@ -308,7 +343,6 @@ const adminButtons = [
             :value="user ? `${user.name} ${user.surname || ''}` : ''"
             readonly
             type="text"
-            placeholder="Enter your name"
             class="w-full border border-gray-300 rounded-[6px] p-[10px] text-[1rem] bg-gray-50 cursor-not-allowed"
           />
 
@@ -361,6 +395,99 @@ const adminButtons = [
             @click="submitVote"
           >
             Submit Vote & Comment
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!--  Add News Modal -->
+    <div
+      v-if="showAddNewsModal"
+      class="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]"
+      @click.self="closeAddNewsModal"
+    >
+      <div
+        class="bg-white w-[600px] h-[800px] rounded-2xl shadow-xl p-6 font-[Outfit] animate-fade-in overflow-y-auto"
+      >
+        <h2 class="text-3xl font-bold text-gray-800 mb-4 text-center">
+          Add News Article
+        </h2>
+
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xl text-gray-700 font-semibold mb-1"
+              >Title</label
+            >
+            <input
+              v-model="newNews.title"
+              type="text"
+              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              placeholder="Enter news title"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xl text-gray-700 font-semibold mb-1"
+              >Author</label
+            >
+            <input
+              v-model="newNews.author"
+              type="text"
+              readonly
+              class="w-full border border-gray-200 bg-gray-100 text-gray-600 rounded-md px-3 py-2 focus:outline-none cursor-not-allowed select-none"
+              placeholder="Author name"
+            />
+          </div>
+
+          <div class="flex flex-col items-center">
+            <label
+              class="block text-gray-700 font-semibold mb-1 text-center text-xl"
+              >Date</label
+            >
+            <input
+              v-model="newNews.date"
+              type="date"
+              class="w-[250px] border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-center"
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-1 text-xl"
+              >Image URL</label
+            >
+            <input
+              v-model="newNews.image"
+              type="text"
+              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              placeholder="Paste image link"
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-1 text-xl"
+              >Full Description</label
+            >
+            <textarea
+              v-model="newNews.description"
+              rows="4"
+              class="w-full h-[250px] border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+              placeholder="Enter detailed description..."
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-4 mt-6">
+          <button
+            @click="closeAddNewsModal"
+            class="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md transition"
+          >
+            Cancel
+          </button>
+          <button
+            @click="saveNews"
+            class="px-5 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition"
+          >
+            Save
           </button>
         </div>
       </div>
