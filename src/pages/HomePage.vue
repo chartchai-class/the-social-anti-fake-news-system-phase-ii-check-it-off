@@ -82,9 +82,19 @@ const accessColor = computed(() => {
   return "bg-gray-300";
 });
 
-function handleLogout() {
+const showLogoutModal = ref(false);
+
+function openLogoutModal() {
+  showLogoutModal.value = true;
+}
+
+function cancelLogout() {
+  showLogoutModal.value = false;
+}
+
+function confirmLogout() {
   localStorage.removeItem("user");
-  alert("You have been logged out.");
+  showLogoutModal.value = false;
   window.location.href = "/login";
 }
 
@@ -108,7 +118,7 @@ const adminButtons = [
     label: "Del News",
     title: "Delete existing news",
     icon: new URL("@/assets/Aside/delete-news.png", import.meta.url).href,
-   colorClass: "bg-[#5AC5F0] text-[#6B2E2E]",
+    colorClass: "bg-[#5AC5F0] text-[#6B2E2E]",
     action: () => router.push("/admin/delete-news"),
   },
   {
@@ -133,7 +143,6 @@ const adminButtons = [
     action: () => router.push("/admin/change-role"),
   },
 ];
-
 </script>
 
 <template>
@@ -184,7 +193,7 @@ const adminButtons = [
             />
           </button>
           <p
-            class="text-[12px] font-semibold  text-center w-[60px] leading-tight"
+            class="text-[12px] font-semibold text-center w-[60px] leading-tight"
           >
             Add News
           </p>
@@ -225,7 +234,7 @@ const adminButtons = [
       </div>
 
       <button
-        @click="handleLogout"
+        @click="openLogoutModal"
         class="flex flex-col items-center space-y-1 text-gray-500 hover:text-red-500 transition-all duration-300"
       >
         <img
@@ -235,6 +244,38 @@ const adminButtons = [
         />
         <span class="text-[11px] font-semibold">Logout</span>
       </button>
+
+      <div
+        v-if="showLogoutModal"
+        class="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]"
+      >
+        <div
+          class="bg-white rounded-2xl shadow-lg w-[350px] p-6 text-center font-[Outfit] animate-fade-in"
+        >
+          <h2 class="text-xl font-semibold text-gray-800 mb-3">
+            Confirm Logout
+          </h2>
+          <p class="text-gray-600 mb-6">
+            Are you sure you want to log out of your account?
+          </p>
+
+          <div class="flex justify-center gap-4">
+            <button
+              @click="cancelLogout"
+              class="px-5 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium transition-all duration-200"
+            >
+              Cancel
+            </button>
+
+            <button
+              @click="confirmLogout"
+              class="px-5 py-2 rounded-md bg-red-500 hover:bg-red-600 text-white font-medium transition-all duration-200"
+            >
+              Log Out
+            </button>
+          </div>
+        </div>
+      </div>
     </aside>
 
     <Header />

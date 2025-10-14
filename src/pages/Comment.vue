@@ -81,18 +81,6 @@
         </div>
       </div>
 
-      <!-- Logout -->
-      <button
-        @click="handleLogout"
-        class="flex flex-col items-center space-y-1 text-gray-500 hover:text-red-500 transition-all duration-300"
-      >
-        <img
-          src="@/assets/Aside/logout-icon.png"
-          alt="Logout"
-          class="w-7 h-7 opacity-80 hover:opacity-100"
-        />
-        <span class="text-[11px] font-semibold">Logout</span>
-      </button>
     </aside>
 
     <!-- ✅ Back button -->
@@ -310,12 +298,6 @@ const accessColor = computed(() => {
   if (access.includes("reader")) return "bg-[#FFC800] border-none";
   return "bg-gray-300";
 });
-
-function handleLogout() {
-  localStorage.removeItem("user");
-  alert("You have been logged out.");
-  window.location.href = "/login";
-}
 
 const adminButtons = [
   {
