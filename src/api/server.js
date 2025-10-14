@@ -98,7 +98,7 @@ app.post("/api/vote", async (req, res) => {
     res.status(200).json({ message: "✅ Vote saved successfully" });
   } catch (error) {
     console.error("Error writing to Google Sheets:", error);
-    res.status(500).json({ message: "❌ Failed to save vote" });
+    res.status(500).json({ message: " Failed to save vote" });
   }
 });
 
@@ -131,7 +131,7 @@ app.post("/api/register", async (req, res) => {
     const { name, surname, email, password } = req.body;
 
     if (!name || !surname || !email || !password) {
-      return res.status(400).json({ message: "❌ Missing required fields" });
+      return res.status(400).json({ message: "Missing required fields" });
     }
 
     const response = await sheets.spreadsheets.values.get({
@@ -153,12 +153,12 @@ app.post("/api/register", async (req, res) => {
 
     res
       .status(200)
-      .json({ message: "✅ Account created successfully", id: newId });
+      .json({ message: "Account created successfully", id: newId });
   } catch (error) {
     console.error("Error saving user:", error);
     res
       .status(500)
-      .json({ message: "❌ Failed to register user", error: error.message });
+      .json({ message: "Failed to register user", error: error.message });
   }
 });
 
@@ -166,10 +166,10 @@ app.post("/api/register", async (req, res) => {
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log("📩 [Login Request]", email, password);
+    console.log(" [Login Request]", email, password);
 
     if (!email || !password) {
-      return res.status(400).json({ message: "❌ Missing email or password" });
+      return res.status(400).json({ message: " Missing email or password" });
     }
 
     const response = await sheets.spreadsheets.values.get({
@@ -178,21 +178,22 @@ app.post("/api/login", async (req, res) => {
     });
 
     const rows = response.data.values || [];
-    console.log("📄 [Sheet3 Rows]", rows.length);
-    console.log("🧾 [First Row Example]", rows[1]);
+    console.log(" [Sheet3 Rows]", rows.length);
+    console.log(" [First Row Example]", rows[1]);
 
+    // ✅ ตรวจทั้ง email และ password
     const user = rows
       .slice(1)
       .find(
         (row) =>
-          row[3]?.trim() &&
+          row[3]?.trim().toLowerCase() === email.trim().toLowerCase() &&
           row[4]?.trim() === password.trim()
       );
 
-    console.log("🔍 [Found User]", user || "❌ Not found");
+    console.log("🔍 [Found User]", user || " Not found");
 
     if (!user) {
-      return res.status(401).json({ message: "❌ Invalid email or password" });
+      return res.status(401).json({ message: " Invalid email or password" });
     }
 
     res.status(200).json({
@@ -206,11 +207,10 @@ app.post("/api/login", async (req, res) => {
       newsCount: user[7],
     });
   } catch (error) {
-    console.error("❌ Error reading Google Sheets:", error);
+    console.error(" Error reading Google Sheets:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
-
 
 // Start Server
 app.listen(port, () => {

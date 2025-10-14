@@ -1,5 +1,6 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap');
+@import "tailwindcss";
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -20,13 +21,10 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-
-  /* ใช้ Flexbox จัดกึ่งกลาง */
   display: flex;
-  justify-content: center; /* แนวนอน */
-  align-items: center;     /* แนวตั้ง */
-
-  flex-direction: column;  /* เรียง element แนวตั้ง */
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
   text-align: center;
 }
 
@@ -51,8 +49,6 @@ button:focus-visible {
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
-
-  /* จัดกึ่งกลาง #app */
   display: flex;
   flex-direction: column;
   justify-content: center;
