@@ -106,14 +106,52 @@ onMounted(() => {
   }, 2000);
 });
 
+const showAddNewsModal = ref(false);
+
+const newNews = ref({
+  title: "",
+  author: "",
+  date: "",
+  image: "",
+  description: "",
+});
+
+function openAddNewsModal() {
+  showAddNewsModal.value = true;
+
+  newNews.value.author = user.value
+    ? `${user.value.name} ${user.value.surname || ""}`.trim()
+    : "";
+}
+
+function closeAddNewsModal() {
+  showAddNewsModal.value = false;
+  Object.assign(newNews.value, {
+    title: "",
+    author: "",
+    date: "",
+    image: "",
+    description: "",
+  });
+}
+
+function saveNews() {
+  if (!newNews.value.title || !newNews.value.author) {
+    alert("Please fill in at least Title and Author.");
+    return;
+  }
+
+  allNews.value.unshift({
+    id: allNews.value.length + 1,
+    title: newNews.value.title,
+    category: "Under Review",
+  });
+
+  console.log("New News Added:", newNews.value);
+
+  closeAddNewsModal();
+}
 const adminButtons = [
-  {
-    label: "Add News",
-    title: "Add new article",
-    icon: new URL("@/assets/Aside/add-news.png", import.meta.url).href,
-    colorClass: "bg-[#00005F] text-[#6B2E2E]",
-    action: () => router.push("/admin/add-news"),
-  },
   {
     label: "Del News",
     title: "Delete existing news",
@@ -177,18 +215,22 @@ const adminButtons = [
           {{ user?.access || "Unknown" }}
         </p>
 
-        <!-- Member Add news -->
+        <!-- Shared Add News (Member & Admin) -->
         <div
-          v-if="user?.access?.toLowerCase().includes('member')"
+          v-if="
+            user?.access?.toLowerCase().includes('member') ||
+            user?.access?.toLowerCase().includes('admin')
+          "
           class="flex flex-col items-center space-y-1 mt-20"
         >
           <button
             class="w-10 h-10 rounded-full overflow-hidden shadow-md hover:scale-110 transition-transform duration-200 flex items-center justify-center bg-[#00005F] text-[#6B2E2E]"
-            title="Member Panel"
+            title="Add News"
+            @click="openAddNewsModal"
           >
             <img
               src="@/assets/Aside/add-news.png"
-              alt="Contributor Icon"
+              alt="Add News Icon"
               class="w-7 h-7 object-contain"
             />
           </button>
@@ -199,10 +241,10 @@ const adminButtons = [
           </p>
         </div>
 
-        <!-- ✅ Admin -->
+        <!-- Admin -->
         <div
           v-if="user?.access?.toLowerCase().includes('admin')"
-          class="flex flex-col items-center space-y-2 mt-20"
+          class="flex flex-col items-center space-y-2"
         >
           <div
             v-for="btn in adminButtons"
@@ -262,14 +304,14 @@ const adminButtons = [
           <div class="flex justify-center gap-4">
             <button
               @click="cancelLogout"
-              class="px-5 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium transition-all duration-200"
+              class="px-5 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold transition-all duration-200"
             >
               Cancel
             </button>
 
             <button
               @click="confirmLogout"
-              class="px-5 py-2 rounded-md bg-red-500 hover:bg-red-600 text-white font-medium transition-all duration-200"
+              class="px-5 py-2 rounded-md bg-red-500 hover:bg-red-600 text-white font-semibold transition-all duration-200"
             >
               Log Out
             </button>
@@ -342,5 +384,99 @@ const adminButtons = [
       class="w-full h-[100px] bg-gray-100 animate-pulse"
     ></div>
     <Footer v-else />
+
+    <!-- Add News Modal -->
+    <div
+      v-if="showAddNewsModal"
+      class="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]"
+      @click.self="closeAddNewsModal"
+    >
+      <div
+        class="bg-white w-[600px] h-[800px] rounded-2xl shadow-xl p-6 font-[Outfit] animate-fade-in"
+      >
+        <h2 class="text-3xl font-bold text-gray-800 mb-4 text-center">
+          Add News Article
+        </h2>
+
+        <div class="space-y-3">
+          <div>
+            <label
+              class="block text-xl text-gray-700 font-semibold mb-1 font-weight-500"
+              >Title</label
+            >
+            <input
+              v-model="newNews.title"
+              type="text"
+              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              placeholder="Enter news title"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xl text-gray-700 font-semibold mb-1"
+              >Author</label
+            >
+            <input
+              v-model="newNews.author"
+              type="text"
+              readonly
+              class="w-full border border-gray-200 bg-gray-100 text-gray-600 rounded-md px-3 py-2 focus:outline-none cursor-not-allowed select-none"
+              placeholder="Author name"
+            />
+          </div>
+
+          <div class="flex flex-col items-center">
+            <label
+              class="block text-gray-700 font-semibold mb-1 text-center text-xl"
+              >Date</label
+            >
+            <input
+              v-model="newNews.date"
+              type="date"
+              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-center"
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-1 text-xl"
+              >Image URL</label
+            >
+            <input
+              v-model="newNews.image"
+              type="text"
+              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              placeholder="Paste image link"
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-1 text-xl"
+              >Full Description</label
+            >
+            <textarea
+              v-model="newNews.description"
+              rows="4"
+              class="w-full h-[250px] border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+              placeholder="Enter detailed description..."
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-4 mt-6">
+          <button
+            @click="closeAddNewsModal"
+            class="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md transition"
+          >
+            Cancel
+          </button>
+          <button
+            @click="saveNews"
+            class="px-5 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
