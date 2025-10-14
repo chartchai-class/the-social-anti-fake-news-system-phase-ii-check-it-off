@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import LikeIcon from "@/assets/Card/Like.png";
 import DislikeIcon from "@/assets/Card/Dislike.png";
 
+const router = useRouter();
 const route = useRoute();
 const id = Number(route.params.id);
 
@@ -61,20 +62,14 @@ async function submitVote() {
       }),
     });
 
-    console.log("📧 Submitting vote:", {
-      id,
-      name: user.value ? `${user.value.name} ${user.value.surname || ""}` : "",
-      email: user.value?.email,
-    });
-
     const data = await res.json();
 
     if (res.ok) {
-      alert("Thank you for your vote! Your feedback has been recorded.");
+      alert("✅ Thank you for your vote! Your feedback has been recorded.");
       form.value = { name: "", vote: "", comment: "", imageUrl: "" };
       await fetchNewsById();
     } else {
-      alert("Failed to save your vote: " + data.message);
+      alert("❌ Failed to save your vote: " + data.message);
     }
   } catch (err) {
     console.error("Error submitting vote:", err);
@@ -84,6 +79,7 @@ async function submitVote() {
   }
 }
 
+// -------------------- Sidebar Logic --------------------
 interface User {
   name: string;
   email: string;
@@ -106,10 +102,10 @@ const firstLetter = computed(() =>
 
 const accessColor = computed(() => {
   const access = user.value?.access?.toLowerCase() || "";
-  console.log("access =", access);
   if (access.includes("admin") || access.includes("full"))
-    return "bg-red-500 border-none";
-  if (access.includes("reader")) return "bg-yellow-400 border-none";
+    return "bg-[#D70000] border-none";
+  if (access.includes("member")) return "bg-[#27809A] border-none";
+  if (access.includes("reader")) return "bg-[#FFC800] border-none";
   return "bg-gray-300";
 });
 
@@ -118,10 +114,146 @@ function handleLogout() {
   alert("You have been logged out.");
   window.location.href = "/login";
 }
+
+const adminButtons = [
+  {
+    label: "Add News",
+    title: "Add new article",
+    icon: new URL("@/assets/Aside/add-news.png", import.meta.url).href,
+    colorClass: "bg-[#00005F]",
+    action: () => router.push("/admin/add-news"),
+  },
+  {
+    label: "Del News",
+    title: "Delete existing news",
+    icon: new URL("@/assets/Aside/delete-news.png", import.meta.url).href,
+    colorClass: "bg-[#5AC5F0]",
+    action: () => router.push("/admin/delete-news"),
+  },
+  {
+    label: "Del User",
+    title: "Delete a user account",
+    icon: new URL("@/assets/Aside/delete-user.png", import.meta.url).href,
+    colorClass: "bg-[#D70000]",
+    action: () => router.push("/admin/delete-user"),
+  },
+  {
+    label: "Del Comment",
+    title: "Delete comment",
+    icon: new URL("@/assets/Aside/delete-comment.png", import.meta.url).href,
+    colorClass: "bg-[#FF7801]",
+    action: () => router.push("/admin/delete-comment"),
+  },
+  {
+    label: "Change Role",
+    title: "Change user role",
+    icon: new URL("@/assets/Aside/change-user-role.png", import.meta.url).href,
+    colorClass: "bg-[#FFC800]",
+    action: () => router.push("/admin/change-role"),
+  },
+];
 </script>
 
 <template>
   <div class="w-[800px] mx-auto justify-center pb-[40px]">
+    <!-- ✅ Sidebar -->
+    <aside
+      class="fixed top-0 left-0 w-[60px] h-full z-20 flex flex-col items-center justify-between py-6 border-r border-gray-200 bg-white"
+    >
+      <div class="flex flex-col items-center space-y-4">
+        <!-- Avatar -->
+        <div
+          class="w-10 h-10 rounded-full bg-[#5AC5F0] text-white flex items-center justify-center text-xl font-bold"
+          :title="user?.name"
+        >
+          {{ firstLetter }}
+        </div>
+
+        <!-- Access Circle -->
+        <div
+          :class="[
+            'w-10 h-10 rounded-full border border-gray-300 -mt-1',
+            accessColor,
+          ]"
+        ></div>
+
+        <!-- Access Label -->
+        <p
+          class="text-[11px] font-semibold text-gray-600 text-center w-[60px] leading-tight break-words -mt-3"
+        >
+          {{ user?.access || "Unknown" }}
+        </p>
+
+        <!-- Member Add News -->
+        <div
+          v-if="user?.access?.toLowerCase().includes('member')"
+          class="flex flex-col items-center space-y-1 mt-20"
+        >
+          <button
+            class="w-10 h-10 rounded-full overflow-hidden shadow-md hover:scale-110 transition-transform duration-200 flex items-center justify-center bg-[#00005F]"
+            title="Member Panel"
+          >
+            <img
+              src="@/assets/Aside/add-news.png"
+              alt="Add News"
+              class="w-7 h-7 object-contain"
+            />
+          </button>
+          <p
+            class="text-[12px] font-semibold text-center w-[60px] leading-tight"
+          >
+            Add News
+          </p>
+        </div>
+
+        <!-- ✅ Admin -->
+        <div
+          v-if="user?.access?.toLowerCase().includes('admin')"
+          class="flex flex-col items-center space-y-2 mt-20"
+        >
+          <div
+            v-for="btn in adminButtons"
+            :key="btn.label"
+            class="flex flex-col items-center"
+          >
+            <button
+              :title="btn.title"
+              @click="btn.action"
+              :class="[
+                'w-10 h-10 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-md hover:scale-110 transition-transform duration-200',
+                btn.colorClass,
+              ]"
+            >
+              <img
+                :src="btn.icon"
+                :alt="btn.label"
+                class="w-6 h-6 object-contain"
+              />
+            </button>
+            <p
+              class="text-[11px] font-semibold text-gray-600 text-center w-[60px] leading-tight mt-2"
+            >
+              {{ btn.label }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logout -->
+      <button
+        @click="handleLogout"
+        class="flex flex-col items-center space-y-1 text-gray-500 hover:text-red-500 transition-all duration-300"
+      >
+        <img
+          src="@/assets/Aside/logout-icon.png"
+          alt="Logout"
+          class="w-7 h-7 opacity-80 hover:opacity-100"
+        />
+        <span class="text-[11px] font-semibold">Logout</span>
+      </button>
+    </aside>
+
+    <!-- ✅ Loading -->
     <div
       v-if="isLoading"
       class="fixed inset-0 bg-white/95 flex flex-col items-center justify-center z-[9999] text-[18px] text-[#333]"
@@ -132,48 +264,8 @@ function handleLogout() {
       <p>Loading news...</p>
     </div>
 
+    <!-- ✅ Main Vote Form -->
     <div v-else>
-      <aside
-        class="fixed top-0 left-0 w-[60px] h-full z-20 flex flex-col items-center justify-between py-6 border-r border-gray-200 bg-white"
-      >
-        <div class="flex flex-col items-center space-y-4">
-          <!-- Avatar -->
-          <div
-            class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center text-xl font-bold"
-            :title="user?.name"
-          >
-            {{ firstLetter }}
-          </div>
-
-          <!-- Access Circle -->
-          <div
-            :class="[
-              'w-10 h-10 rounded-full border border-gray-300',
-              accessColor,
-            ]"
-          ></div>
-
-          <!-- Access Label -->
-          <p
-            class="text-[11px] font-semibold text-gray-600 text-center w-[60px] leading-tight break-words -mt-3"
-          >
-            {{ user?.access || "Unknown" }}
-          </p>
-        </div>
-
-        <button
-          @click="handleLogout"
-          class="flex flex-col items-center space-y-1 text-gray-500 hover:text-red-500 transition-all duration-300"
-        >
-          <img
-            src="@/assets/Aside/logout-icon.png"
-            alt="Logout"
-            class="w-7 h-7 opacity-80 hover:opacity-100"
-          />
-          <span class="text-[11px] font-semibold">Logout</span>
-        </button>
-      </aside>
-
       <router-link
         :to="`/news/${id}`"
         class="flex items-center gap-[6px] bg-gray-100 text-black text-[16px] rounded-[8px] px-[20px] py-[10px] max-w-fit cursor-pointer transition-colors duration-300 ease-in-out hover:bg-gray-300 hover:text-black no-underline"
@@ -188,7 +280,7 @@ function handleLogout() {
 
       <div class="flex justify-center gap-[15px] mt-[10px]">
         <div
-          class="flex-1 bg-white border border-gray-300 rounded-[12px] p-[30px] shadow-[0_4px_10px_rgba(0,0,0,0.1)] text-left"
+          class="flex-1 bg-white border border-gray-300 rounded-[12px] p-[30px] shadow-md text-left"
         >
           <h2 class="text-[1.6rem] font-bold -mt-[10px]">{{ news.title }}</h2>
 
@@ -210,32 +302,20 @@ function handleLogout() {
           </p>
 
           <div class="flex justify-center items-center gap-[10px] mt-[15px]">
-            <span
-              class="text-green-700 rounded-[6px] px-[12px] py-[6px] font-medium flex items-center gap-1"
-            >
-              <img
-                :src="LikeIcon"
-                alt="Like"
-                class="w-[25px] h-[25px] align-middle"
-              />
+            <span class="text-green-700 flex items-center gap-1">
+              <img :src="LikeIcon" class="w-[25px] h-[25px]" />
               {{ news.upVotes }}
             </span>
-
-            <span
-              class="text-red-700 rounded-[6px] px-[12px] py-[6px] font-medium flex items-center gap-1"
-            >
-              <img
-                :src="DislikeIcon"
-                alt="Dislike"
-                class="w-[25px] h-[25px] align-middle"
-              />
+            <span class="text-red-700 flex items-center gap-1">
+              <img :src="DislikeIcon" class="w-[25px] h-[25px]" />
               {{ news.downVotes }}
             </span>
           </div>
         </div>
 
+        <!-- ✅ Vote Form -->
         <div
-          class="flex-1 bg-white border border-gray-300 rounded-[12px] p-[30px] shadow-[0_4px_10px_rgba(0,0,0,0.1)] text-left"
+          class="flex-1 bg-white border border-gray-300 rounded-[12px] p-[30px] shadow-md text-left"
         >
           <h3 class="text-[1.4rem] font-semibold -mt-[10px] mb-4">
             Cast Your Vote
@@ -247,7 +327,7 @@ function handleLogout() {
             readonly
             type="text"
             placeholder="Enter your name"
-            class="w-full border border-gray-300 rounded-[6px] p-[10px] text-[1rem] font-[Outfit] mt-[-5px] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 bg-gray-50 cursor-not-allowed"
+            class="w-full border border-gray-300 rounded-[6px] p-[10px] text-[1rem] bg-gray-50 cursor-not-allowed"
           />
 
           <label class="block font-medium mb-[0.3rem] mt-4">Your Vote</label>
@@ -281,17 +361,17 @@ function handleLogout() {
           <textarea
             v-model="form.comment"
             placeholder="Explain why you think this news is real or fake..."
-            class="w-full border border-gray-300 rounded-[6px] p-[10px] text-[1rem] font-[Outfit] mt-[-5px] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 min-h-[100px] resize-none"
+            class="w-full border border-gray-300 rounded-[6px] p-[10px] text-[1rem] min-h-[100px] resize-none"
           ></textarea>
 
-          <label class="block font-medium mb-[0.3rem] mt-4"
-            >Supporting Image URL (optional)</label
-          >
+          <label class="block font-medium mb-[0.3rem] mt-4">
+            Supporting Image URL (optional)
+          </label>
           <input
             v-model="form.imageUrl"
             type="text"
             placeholder="https://example.com/image.jpg"
-            class="w-full border border-gray-300 rounded-[6px] p-[10px] text-[1rem] font-[Outfit] mt-[-5px] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
+            class="w-full border border-gray-300 rounded-[6px] p-[10px] text-[1rem]"
           />
 
           <button

@@ -182,7 +182,7 @@ app.post("/api/register", async (req, res) => {
             surname,
             email,
             password,
-            "Reader",
+            `=IF(INDIRECT("G"&${newId + 1})="", "", IF(INDIRECT("G"&${newId + 1})>3, "Member", "Reader"))`,
             `=COUNTIF(Sheet2!B:B, INDIRECT("J" & ${newId + 1}))`,
             0,
           ],
