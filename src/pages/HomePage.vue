@@ -79,7 +79,8 @@ const accessColor = computed(() => {
   console.log("access =", access);
   if (access.includes("admin") || access.includes("full"))
     return "bg-red-500 border-none"; // Admin
-  if (access.includes("vote")) return "bg-yellow-400 border-none"; // Vote only
+ if (access.includes("reader")) 
+    return "bg-yellow-400 border-none";
   return "bg-gray-300";
 });
 
