@@ -74,34 +74,6 @@ app.get("/api/news", async (_req, res) => {
   }
 });
 
-// POST /api/vote
-app.post("/api/vote", async (req, res) => {
-  const { id, name, status, comment, imageUrl } = req.body;
-
-  if (!id || !name || !status || !comment) {
-    return res.status(400).json({ message: "Missing required fields" });
-  }
-
-  const readableStatus =
-    status === "up" ? "up" : status === "down" ? "down" : status || "Unknown";
-
-  try {
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: SPREADSHEET_ID,
-      range: "Sheet2!A:E",
-      valueInputOption: "USER_ENTERED",
-      requestBody: {
-        values: [[id, name, readableStatus, comment, imageUrl || ""]],
-      },
-    });
-
-    res.status(200).json({ message: "✅ Vote saved successfully" });
-  } catch (error) {
-    console.error("Error writing to Google Sheets:", error);
-    res.status(500).json({ message: " Failed to save vote" });
-  }
-});
-
 app.get("/api/comments", async (_req, res) => {
   try {
     const response = await sheets.spreadsheets.values.get({
