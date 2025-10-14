@@ -303,7 +303,6 @@ const loginSchema = yup.object({
   loginPassword: yup.string().required(" Please enter your password"),
 });
 
-//  สมัครสมาชิก
 async function handleCreateAccount() {
   try {
     errors.value = {};
@@ -332,7 +331,7 @@ async function handleCreateAccount() {
     const result = await response.json();
 
     if (response.ok) {
-      alert(`🎉 Your account is ready. Let's get started!`);
+      alert(`Your account is ready. Let's get started!`);
       isSignUp.value = false;
 
       name.value = "";
@@ -383,11 +382,27 @@ async function handleLogin() {
     }
 
     if (response.ok) {
-      alert(
-        `🌟 Welcome, ${result.name || "User"}! You’ve logged in successfully.`
-      );
-      localStorage.setItem("user", JSON.stringify(result));
-      window.location.href = "/";
+      const email = result.email || loginEmail.value;
+      const isAdmin = email.toLowerCase().endsWith("@fadmin.com");
+
+      const userData = {
+  name: result.name,
+  surname: result.surname,
+  email: result.email,
+  access: result.access, // ✅ เพิ่มตรงนี้
+};
+localStorage.setItem("user", JSON.stringify(userData));
+
+
+      if (isAdmin) {
+        alert(`🛠️ Welcome Admin, ${result.name || "User"}!`);
+        window.location.href = "/admin";
+      } else {
+        alert(
+          `🌟 Welcome, ${result.name || "User"}! You’ve logged in successfully.`
+        );
+        window.location.href = "/";
+      }
     } else {
       alert(result.message || " Invalid email or password");
     }
@@ -421,8 +436,6 @@ async function handleLogin() {
 .slide-right-enter-active,
 .slide-right-leave-active {
   transition: all 0.7s ease;
-}
-.slide-right-enter-from {
   transform: translateX(-100%);
   opacity: 0;
 }
