@@ -119,7 +119,18 @@ app.post("/api/register", async (req, res) => {
       range: "Sheet3!A:H",
       valueInputOption: "USER_ENTERED",
       requestBody: {
-        values: [[newId, name, surname, email, password, "Vote only", 0, 0]],
+        values: [
+          [
+            newId,
+            name,
+            surname,
+            email,
+            password,
+            "Reader",
+            `=COUNTIF(Sheet2!B:B, INDIRECT("J" & ${newId + 1}))`,
+            0,
+          ],
+        ],
       },
     });
 

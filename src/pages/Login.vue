@@ -386,13 +386,12 @@ async function handleLogin() {
       const isAdmin = email.toLowerCase().endsWith("@fadmin.com");
 
       const userData = {
-  name: result.name,
-  surname: result.surname,
-  email: result.email,
-  access: result.access, // ✅ เพิ่มตรงนี้
-};
-localStorage.setItem("user", JSON.stringify(userData));
-
+        name: result.name,
+        surname: result.surname,
+        email: result.email,
+        access: result.access,
+      };
+      localStorage.setItem("user", JSON.stringify(userData));
 
       if (isAdmin) {
         alert(`🛠️ Welcome Admin, ${result.name || "User"}!`);
