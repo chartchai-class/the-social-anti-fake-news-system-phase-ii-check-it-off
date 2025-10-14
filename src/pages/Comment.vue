@@ -12,6 +12,49 @@
       Back to News Detail
     </router-link>
 
+    <aside
+        class="fixed top-0 left-0 w-[60px] h-full z-20 flex flex-col items-center justify-between py-6 border-r border-gray-200 bg-white"
+      >
+        <!-- 🔹 ส่วนบน: Avatar + สถานะ -->
+        <div class="flex flex-col items-center space-y-4">
+          <!-- Avatar -->
+          <div
+            class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center text-xl font-bold"
+            :title="user?.name"
+          >
+            {{ firstLetter }}
+          </div>
+
+          <!-- Access Circle -->
+          <div
+            :class="[
+              'w-10 h-10 rounded-full border border-gray-300',
+              accessColor,
+            ]"
+          ></div>
+
+          <!-- Access Label -->
+          <p
+            class="text-[11px] font-semibold text-gray-600 text-center w-[60px] leading-tight break-words -mt-3"
+          >
+            {{ user?.access || "Unknown" }}
+          </p>
+        </div>
+
+        <!-- 🔸 ส่วนล่าง: Logout -->
+        <button
+          @click="handleLogout"
+          class="flex flex-col items-center space-y-1 text-gray-500 hover:text-red-500 transition-all duration-300"
+        >
+          <img
+            src="@/assets/Aside/logout-icon.png"
+            alt="Logout"
+            class="w-7 h-7 opacity-80 hover:opacity-100"
+          />
+          <span class="text-[11px] font-semibold">Logout</span>
+        </button>
+      </aside>
+
     <div
       class="h-[170px] bg-white rounded-xl border border-[#d6d6d6] shadow-[0_3px_8px_rgba(0,0,0,0.08)] px-6 py-5 flex justify-between items-center w-full mt-2.5"
     >
@@ -121,7 +164,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import LikeIcon from "@/assets/Card/Like.png";
 import DislikeIcon from "@/assets/Card/Dislike.png";
@@ -187,4 +230,40 @@ onMounted(async () => {
     isLoadingComments.value = false;
   }
 });
+
+
+interface User {
+  name: string;
+  email: string;
+  surname?: string;
+  access?: string;
+}
+
+const user = ref<User | null>(null);
+
+onMounted(() => {
+  const savedUser = localStorage.getItem("user");
+  if (savedUser) {
+    user.value = JSON.parse(savedUser);
+  }
+});
+
+const firstLetter = computed(() =>
+  user.value?.name ? user.value.name.charAt(0).toUpperCase() : "?"
+);
+
+const accessColor = computed(() => {
+  const access = user.value?.access?.toLowerCase() || "";
+  console.log("access =", access);
+  if (access.includes("admin") || access.includes("full"))
+    return "bg-red-500 border-none"; // Admin
+  if (access.includes("vote")) return "bg-yellow-400 border-none"; // Vote only
+  return "bg-gray-300";
+});
+
+function handleLogout() {
+  localStorage.removeItem("user");
+  alert("You have been logged out.");
+  window.location.href = "/login";
+}
 </script>
