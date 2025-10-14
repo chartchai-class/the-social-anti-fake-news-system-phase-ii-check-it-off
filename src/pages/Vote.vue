@@ -58,8 +58,6 @@ async function submitVote() {
         status: form.value.vote,
         comment: form.value.comment,
         imageUrl: form.value.imageUrl || "",
-        access: user.value?.access || "Unknown",
-        email: user.value?.email,
       }),
     });
 

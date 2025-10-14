@@ -74,6 +74,62 @@ app.get("/api/news", async (_req, res) => {
   }
 });
 
+// POST /api/vote
+app.post("/api/vote", async (req, res) => {
+  try {
+    const { id, name, status, comment, imageUrl } = req.body;
+
+    if (!id || !name || !status || !comment) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    console.log("🗳️ New Vote Received:", { id, name, status, comment });
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: "Sheet2!A:E",
+      valueInputOption: "USER_ENTERED",
+      requestBody: {
+        values: [[id, name, status, comment, imageUrl || ""]],
+      },
+    });
+
+    const newsResponse = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${SHEET_NAME}!A:K`,
+    });
+
+    const rows = newsResponse.data.values || [];
+    const rowIndex = rows.findIndex((r) => Number(r[0]) === Number(id));
+
+    if (rowIndex > 0) {
+      const current = rows[rowIndex];
+      let upVotes = Number(current[7]) || 0;
+      let downVotes = Number(current[8]) || 0;
+
+      if (status === "up") upVotes++;
+      else if (status === "down") downVotes++;
+
+      const updateRange = `${SHEET_NAME}!H${rowIndex + 1}:I${rowIndex + 1}`;
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: updateRange,
+        valueInputOption: "USER_ENTERED",
+        requestBody: {
+          values: [[upVotes, downVotes]],
+        },
+      });
+    }
+
+    res.status(200).json({ message: "Vote saved successfully" });
+  } catch (error) {
+    console.error("Error saving vote:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to save vote", error: error.message });
+  }
+});
+
 app.get("/api/comments", async (_req, res) => {
   try {
     const response = await sheets.spreadsheets.values.get({
