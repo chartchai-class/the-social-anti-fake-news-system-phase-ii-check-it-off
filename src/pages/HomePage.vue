@@ -3,13 +3,32 @@ import { ref, computed, onMounted, watch } from "vue";
 import Header from "../components/Header.vue";
 import NewsList from "../components/NewsList.vue";
 import Footer from "../components/Footer.vue";
+import AsideMenu from "../components/AsideMenu.vue";
+import AddNewsModal from "../components/AddNewsModal.vue";
+
+interface User {
+  name: string;
+  email: string;
+  surname?: string;
+  access?: string;
+}
+
+interface NewsItem {
+  id: number;
+  title: string;
+  category: string;
+  author?: string;
+  date?: string;
+  image?: string;
+  description?: string;
+}
 
 const buttons = ["All News", "Verified", "Fake News", "Under Review"];
 const activeIndex = ref(0);
 const itemsPerPage = ref(6);
 const isLoading = ref(true);
 
-const allNews = ref(
+const allNews = ref<NewsItem[]>(
   Array.from({ length: 24 }, (_, i) => ({
     id: i + 1,
     title: `News Item ${i + 1}`,
@@ -18,15 +37,10 @@ const allNews = ref(
   }))
 );
 
-function setActive(index: number) {
-  activeIndex.value = index;
-}
+const user = ref<User | null>(null);
+const visibleItems = ref(itemsPerPage.value);
 
-onMounted(() => {
-  setTimeout(() => {
-    isLoading.value = false;
-  }, 1000);
-});
+const showAddNewsModal = ref(false);
 
 const filteredNews = computed(() => {
   const filter = buttons[activeIndex.value];
@@ -34,15 +48,17 @@ const filteredNews = computed(() => {
   return allNews.value.filter((n) => n.category === filter);
 });
 
-const visibleItems = ref(itemsPerPage.value);
-
-const displayedNews = computed(() => {
-  return filteredNews.value.slice(0, visibleItems.value);
-});
+const displayedNews = computed(() =>
+  filteredNews.value.slice(0, visibleItems.value)
+);
 
 watch(itemsPerPage, (newVal) => {
   visibleItems.value = newVal;
 });
+
+function setActive(index: number) {
+  activeIndex.value = index;
+}
 
 function handleItemsChange() {
   console.log(`User selected: ${itemsPerPage.value} items per page`);
@@ -53,15 +69,55 @@ function loadMore() {
   visibleItems.value = Math.min(nextVisible, filteredNews.value.length);
   itemsPerPage.value = visibleItems.value;
 }
+
+function openAddNewsModal() {
+  showAddNewsModal.value = true;
+}
+
+function closeAddNewsModal() {
+  showAddNewsModal.value = false;
+}
+
+function handleSaveNews(newItem: NewsItem) {
+  allNews.value.unshift({
+    id: allNews.value.length + 1,
+    title: newItem.title,
+    author: newItem.author,
+    date: newItem.date,
+    image: newItem.image,
+    description: newItem.description,
+    category: "Under Review",
+  });
+  console.log("✅ New News Added:", newItem);
+}
+
+onMounted(() => {
+  const savedUser = localStorage.getItem("user");
+  if (savedUser) {
+    user.value = JSON.parse(savedUser);
+  }
+
+  isLoading.value = true;
+  setTimeout(() => {
+    isLoading.value = false;
+  }, 2000);
+});
 </script>
 
 <template>
-  <div id="app" class="flex flex-col min-h-screen bg-white font-[Outfit]">
+  <div
+    id="app"
+    class="flex flex-col min-h-screen bg-white font-[Outfit] relative"
+  >
+    <!-- Sidebar -->
+    <AsideMenu :user="user" @openAddNews="openAddNewsModal" />
 
+    <!-- Header -->
     <Header />
 
+    <!-- Filter Buttons + Items per Page -->
     <div
-      class="w-[125%] flex justify-between items-center gap-6 px-8 py-4 rounded-xl flex-wrap mb-[-15px]"
+      class="ml-[50px] w-[calc(125%-50px)] flex justify-between items-center gap-6 px-8 py-4 rounded-xl flex-wrap mb-[-15px]"
     >
       <div class="flex flex-wrap gap-3">
         <button
@@ -90,20 +146,11 @@ function loadMore() {
       </div>
     </div>
 
+    <!-- News List -->
     <div
-      class="flex flex-1 min-w-[1200px] min-h-[600px] items-center justify-center"
+      class="flex flex-1 min-w-[1280px] min-h-[600px] justify-start items-start px-8"
     >
-      <div
-        v-if="isLoading"
-        class="flex flex-col items-center justify-center text-center text-[#555]"
-      >
-        <div
-          class="w-[60px] h-[60px] border-[6px] border-gray-200 border-t-[#2563eb] rounded-full animate-spin mb-4"
-        ></div>
-        <p>Loading news...</p>
-      </div>
-
-      <div v-else>
+      <div class="flex-1">
         <NewsList
           :filterIndex="activeIndex"
           :itemsPerPage="visibleItems"
@@ -112,24 +159,35 @@ function loadMore() {
       </div>
     </div>
 
-    <div class="flex justify-center my-6">
+    <!-- Load More -->
+    <div class="flex justify-center my-6 ml-13">
+      <div
+        v-if="isLoading"
+        class="w-[150px] h-[42px] bg-gray-200 rounded-md animate-pulse"
+      ></div>
+
       <button
-        v-if="visibleItems < filteredNews.length"
+        v-else-if="visibleItems < filteredNews.length"
         @click="loadMore"
-        class="px-6 py-2 !bg-blue-500 !text-white rounded-md hover:!bg-blue-600 transition font-[Outfit]"
+        class="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition font-[Outfit]"
       >
         More News
       </button>
-
-      <router-link
-      to="/login"
-      class="bg-[#2563eb] text-white px-5 py-2.5 rounded-md font-[Outfit] text-[15px] font-medium
-             cursor-pointer transition-all duration-300 ease-in-out hover:bg-[#1d4ed8] ml-20" 
-    >
-      Login
-    </router-link>
     </div>
 
-    <Footer />
+    <!-- Footer -->
+    <div
+      v-if="isLoading"
+      class="w-full h-[100px] bg-gray-100 animate-pulse"
+    ></div>
+    <Footer v-else />
+
+    <!-- Add News Modal -->
+    <AddNewsModal
+      :show="showAddNewsModal"
+      :user="user"
+      @close="closeAddNewsModal"
+      @save="handleSaveNews"
+    />
   </div>
 </template>

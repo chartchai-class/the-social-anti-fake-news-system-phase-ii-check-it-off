@@ -284,7 +284,7 @@ function clearError(field) {
 
 const signUpSchema = yup.object({
   name: yup.string().required("Please enter your name"),
-  surname: yup.string().required("Please enter your surname"), // ✅ เพิ่ม validation
+  surname: yup.string().required("Please enter your surname"),
   email: yup
     .string()
     .email("Invalid email format")
@@ -299,8 +299,8 @@ const loginSchema = yup.object({
   loginEmail: yup
     .string()
     .email("Invalid email format")
-    .required("Please enter your email"),
-  loginPassword: yup.string().required("Please enter your password"),
+    .required(" Please enter your email"),
+  loginPassword: yup.string().required(" Please enter your password"),
 });
 
 async function handleCreateAccount() {
@@ -339,14 +339,16 @@ async function handleCreateAccount() {
       email.value = "";
       password.value = "";
     } else {
-      alert(`❌ Failed to register: ${result.message || "Unknown error"}`);
+      alert(
+        ` Failed to register: ${result.message || "Unexpected issue occurred."}`
+      );
     }
   } catch (err) {
     if (err.inner) {
       err.inner.forEach((e) => (errors.value[e.path] = e.message));
     } else {
-      console.error("Error:", err);
-      alert("❌ Something went wrong.");
+      console.error(" Server Error:", err);
+      alert("We’re having trouble connecting. Please try again later.");
     }
   }
 }
@@ -370,25 +372,48 @@ async function handleLogin() {
     });
 
     const text = await response.text();
-    console.log("📩 Raw response:", text);
+    console.log("Raw response:", text);
 
     let result;
     try {
       result = JSON.parse(text);
     } catch {
-      throw new Error("❌ Server response is not JSON");
+      throw new Error("Server response is not JSON");
     }
 
     if (response.ok) {
-      alert(`✅ Welcome back, ${result.name || "User"}!`);
-      localStorage.setItem("user", JSON.stringify(result));
-      window.location.href = "/";
+      const email = result.email || loginEmail.value;
+      const isAdmin = email.toLowerCase().endsWith("@fadmin.com");
+
+      const userData = {
+        name: result.name,
+        surname: result.surname,
+        email: result.email,
+        access: result.access,
+      };
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      if (isAdmin) {
+        alert(`🛠️ Welcome Admin, ${result.name || "User"}!`);
+        window.location.href = "/admin";
+      } else {
+        alert(
+          `🌟 Welcome, ${result.name || "User"}! You’ve logged in successfully.`
+        );
+        window.location.href = "/";
+      }
     } else {
-      alert(result.message || "❌ Invalid email or password");
+      alert(result.message || " Invalid email or password");
     }
   } catch (err) {
-    console.error("❌ Error in handleLogin:", err);
-    alert("❌ Something went wrong.");
+    if (err.inner) {
+      err.inner.forEach((e) => (errors.value[e.path] = e.message));
+    } else {
+      console.error(" Unexpected Error:", err);
+      alert(
+        "Unable to log in right now. Please check your connection and try again."
+      );
+    }
   }
 }
 </script>
@@ -410,8 +435,6 @@ async function handleLogin() {
 .slide-right-enter-active,
 .slide-right-leave-active {
   transition: all 0.7s ease;
-}
-.slide-right-enter-from {
   transform: translateX(-100%);
   opacity: 0;
 }

@@ -6,6 +6,8 @@ import LikeIcon from "@/assets/Card/Like.png";
 import DislikeIcon from "@/assets/Card/Dislike.png";
 import CommentIcon from "@/assets/Card/Comment.png";
 
+const emit = defineEmits(["loaded"]);
+
 const router = useRouter();
 
 function goToDetail(id: number) {
@@ -56,13 +58,14 @@ onMounted(async () => {
     if (data.news && Array.isArray(data.news)) {
       newsList.value = data.news;
     } else {
-      error.value = "ไม่มีข้อมูลข่าวจาก Google Sheet";
+      error.value = "No news data found from Google Sheet";
     }
   } catch (err: any) {
     console.error(err);
-    error.value = "ไม่สามารถโหลดข้อมูลได้: " + err.message;
+    error.value = "Failed to load data: " + err.message;
   } finally {
     loading.value = false;
+    emit("loaded");
   }
 });
 
@@ -95,9 +98,38 @@ const paginatedNews = computed(() =>
 
 <template>
   <div
-    class="relative w-[125%] -left-[12.5%] font-[Outfit] py-4 px-8 box-border"
+    class="relative ml-[50px] w-[calc(125%-50px)] -left-[12.5%] font-[Outfit] py-4 px-8 box-border"
   >
-    <p v-if="loading" class="text-center text-gray-500 mt-4">Loading news...</p>
+    <div
+      v-if="loading"
+      class="grid justify-center gap-6 grid-cols-3 md:grid-cols-3 sm:grid-cols-1 animate-pulse"
+    >
+      <div
+        v-for="n in 6"
+        :key="n"
+        class="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col justify-between leading-[1.3]"
+      >
+        <div class="flex justify-between items-start">
+          <div class="h-5 w-[70%] bg-gray-200 rounded"></div>
+          <div class="h-5 w-[20%] bg-gray-200 rounded"></div>
+        </div>
+
+        <div class="mt-4 space-y-2">
+          <div class="h-4 w-full bg-gray-200 rounded"></div>
+          <div class="h-4 w-[90%] bg-gray-200 rounded"></div>
+          <div class="h-4 w-[80%] bg-gray-200 rounded"></div>
+        </div>
+
+        <div class="mt-4 flex gap-4">
+          <div class="h-4 w-12 bg-gray-200 rounded"></div>
+          <div class="h-4 w-12 bg-gray-200 rounded"></div>
+          <div class="h-4 w-20 bg-gray-200 rounded"></div>
+        </div>
+
+        <div class="mt-4 h-10 bg-gray-200 rounded"></div>
+      </div>
+    </div>
+
     <p v-else-if="error" class="text-center text-red-500 mt-4">{{ error }}</p>
 
     <p
@@ -173,3 +205,4 @@ const paginatedNews = computed(() =>
     </div>
   </div>
 </template>
+

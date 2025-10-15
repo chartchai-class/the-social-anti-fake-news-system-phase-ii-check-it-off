@@ -76,29 +76,57 @@ app.get("/api/news", async (_req, res) => {
 
 // POST /api/vote
 app.post("/api/vote", async (req, res) => {
-  const { id, name, status, comment, imageUrl } = req.body;
-
-  if (!id || !name || !status || !comment) {
-    return res.status(400).json({ message: "Missing required fields" });
-  }
-
-  const readableStatus =
-    status === "up" ? "up" : status === "down" ? "down" : status || "Unknown";
-
   try {
+    const { id, name, status, comment, imageUrl } = req.body;
+
+    if (!id || !name || !status || !comment) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    console.log("🗳️ New Vote Received:", { id, name, status, comment });
+
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
       range: "Sheet2!A:E",
       valueInputOption: "USER_ENTERED",
       requestBody: {
-        values: [[id, name, readableStatus, comment, imageUrl || ""]],
+        values: [[id, name, status, comment, imageUrl || ""]],
       },
     });
 
-    res.status(200).json({ message: "✅ Vote saved successfully" });
+    const newsResponse = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${SHEET_NAME}!A:K`,
+    });
+
+    const rows = newsResponse.data.values || [];
+    const rowIndex = rows.findIndex((r) => Number(r[0]) === Number(id));
+
+    if (rowIndex > 0) {
+      const current = rows[rowIndex];
+      let upVotes = Number(current[7]) || 0;
+      let downVotes = Number(current[8]) || 0;
+
+      if (status === "up") upVotes++;
+      else if (status === "down") downVotes++;
+
+      const updateRange = `${SHEET_NAME}!H${rowIndex + 1}:I${rowIndex + 1}`;
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: updateRange,
+        valueInputOption: "USER_ENTERED",
+        requestBody: {
+          values: [[upVotes, downVotes]],
+        },
+      });
+    }
+
+    res.status(200).json({ message: "Vote saved successfully" });
   } catch (error) {
-    console.error("Error writing to Google Sheets:", error);
-    res.status(500).json({ message: "❌ Failed to save vote" });
+    console.error("Error saving vote:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to save vote", error: error.message });
   }
 });
 
@@ -131,7 +159,7 @@ app.post("/api/register", async (req, res) => {
     const { name, surname, email, password } = req.body;
 
     if (!name || !surname || !email || !password) {
-      return res.status(400).json({ message: "❌ Missing required fields" });
+      return res.status(400).json({ message: "Missing required fields" });
     }
 
     const response = await sheets.spreadsheets.values.get({
@@ -147,18 +175,31 @@ app.post("/api/register", async (req, res) => {
       range: "Sheet3!A:H",
       valueInputOption: "USER_ENTERED",
       requestBody: {
-        values: [[newId, name, surname, email, password, "Vote only", 0, 0]],
+        values: [
+          [
+            newId,
+            name,
+            surname,
+            email,
+            password,
+            `=IF(INDIRECT("G"&${newId + 1})="", "", IF(INDIRECT("G"&${
+              newId + 1
+            })>3, "Member", "Reader"))`,
+            `=COUNTIF(Sheet2!B:B, INDIRECT("J" & ${newId + 1}))`,
+            0,
+          ],
+        ],
       },
     });
 
     res
       .status(200)
-      .json({ message: "✅ Account created successfully", id: newId });
+      .json({ message: "Account created successfully", id: newId });
   } catch (error) {
     console.error("Error saving user:", error);
     res
       .status(500)
-      .json({ message: "❌ Failed to register user", error: error.message });
+      .json({ message: "Failed to register user", error: error.message });
   }
 });
 
@@ -166,10 +207,10 @@ app.post("/api/register", async (req, res) => {
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log("📩 [Login Request]", email, password);
+    console.log(" [Login Request]", email, password);
 
     if (!email || !password) {
-      return res.status(400).json({ message: "❌ Missing email or password" });
+      return res.status(400).json({ message: " Missing email or password" });
     }
 
     const response = await sheets.spreadsheets.values.get({
@@ -178,21 +219,22 @@ app.post("/api/login", async (req, res) => {
     });
 
     const rows = response.data.values || [];
-    console.log("📄 [Sheet3 Rows]", rows.length);
-    console.log("🧾 [First Row Example]", rows[1]);
+    console.log(" [Sheet3 Rows]", rows.length);
+    console.log(" [First Row Example]", rows[1]);
 
+    // ✅ ตรวจทั้ง email และ password
     const user = rows
       .slice(1)
       .find(
         (row) =>
-          row[3]?.trim() &&
+          row[3]?.trim().toLowerCase() === email.trim().toLowerCase() &&
           row[4]?.trim() === password.trim()
       );
 
-    console.log("🔍 [Found User]", user || "❌ Not found");
+    console.log("🔍 [Found User]", user || " Not found");
 
     if (!user) {
-      return res.status(401).json({ message: "❌ Invalid email or password" });
+      return res.status(401).json({ message: " Invalid email or password" });
     }
 
     res.status(200).json({
@@ -206,11 +248,82 @@ app.post("/api/login", async (req, res) => {
       newsCount: user[7],
     });
   } catch (error) {
-    console.error("❌ Error reading Google Sheets:", error);
+    console.error(" Error reading Google Sheets:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
+// ✅ POST /api/news
+app.post("/api/news", async (req, res) => {
+  try {
+    const {
+      id,
+      title,
+      stats,
+      description,
+      author,
+      image,
+      date,
+      upVotes,
+      downVotes,
+      comments,
+      fullDescription,
+      mockUpvote,
+      mockDownvote,
+    } = req.body;
+
+    // ตรวจสอบค่าบังคับ
+    if (!title || !author || !date) {
+      return res.status(400).json({ message: "Missing required fields." });
+    }
+
+    // ดึงข้อมูลทั้งหมดเพื่อหาล่าสุด (หา id ใหม่)
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${SHEET_NAME}!A:A`,
+    });
+
+    const rows = response.data.values || [];
+    const newId = rows.length + 1;
+
+    const statsFormula = `=IF(H${newId}>I${newId},"Verified",IF(I${newId}>H${newId},"Fake News","Unverified"))`;
+    const voteupFormula = `=M${newId} + Sheet2!I${newId}`;
+    const votedownFormula = `=N${newId} + Sheet2!J${newId}`;
+    const countcommentFormula = `=COUNTIF(Sheet2!A2:A, ${newId})`;
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: "Sheet1!A1", // ✅ เริ่มใส่จากคอลัมน์ A เสมอ
+      valueInputOption: "USER_ENTERED",
+      insertDataOption: "INSERT_ROWS", // ✅ บังคับให้เพิ่มแถวใหม่
+      requestBody: {
+        values: [
+          [
+            newId,
+            title,
+            statsFormula,
+            description || "",
+            author,
+            image || "",
+            date,
+            voteupFormula,
+            votedownFormula,
+            countcommentFormula,
+            fullDescription || "",
+            "",
+            mockUpvote || 0,
+            mockDownvote || 0,
+          ],
+        ],
+      },
+    });
+
+    res.status(200).json({ message: "News added successfully!" });
+  } catch (error) {
+    console.error("❌ Error adding news:", error);
+    res.status(500).json({ message: "Failed to add news." });
+  }
+});
 
 // Start Server
 app.listen(port, () => {
