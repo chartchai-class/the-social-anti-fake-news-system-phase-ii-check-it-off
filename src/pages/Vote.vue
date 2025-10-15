@@ -4,13 +4,9 @@ import { useRoute } from "vue-router";
 import LikeIcon from "@/assets/Card/Like.png";
 import DislikeIcon from "@/assets/Card/Dislike.png";
 
-// ✅ ใช้ Component ที่แยกไว้แล้ว
 import AsideMenu from "@/components/AsideMenu.vue";
 import AddNewsModal from "@/components/AddNewsModal.vue";
 
-/* -------------------------------------------------------------------------- */
-/*                                   TYPES                                   */
-/* -------------------------------------------------------------------------- */
 interface User {
   name: string;
   email: string;
@@ -18,9 +14,15 @@ interface User {
   access?: string;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                  STATE                                    */
-/* -------------------------------------------------------------------------- */
+interface NewsItem {
+  id: number;
+  title: string;
+  author?: string;
+  date?: string;
+  image?: string;
+  description?: string;
+}
+
 const route = useRoute();
 const id = Number(route.params.id);
 
@@ -37,9 +39,6 @@ const form = ref({
   imageUrl: "",
 });
 
-/* -------------------------------------------------------------------------- */
-/*                              FETCH NEWS                                   */
-/* -------------------------------------------------------------------------- */
 async function fetchNewsById() {
   try {
     const res = await fetch("http://localhost:5175/api/news");
@@ -58,9 +57,6 @@ async function fetchNewsById() {
 
 onMounted(fetchNewsById);
 
-/* -------------------------------------------------------------------------- */
-/*                              SUBMIT VOTE                                  */
-/* -------------------------------------------------------------------------- */
 async function submitVote() {
   if (!form.value.comment || !form.value.vote) {
     alert("⚠️ Please select your vote and add a comment!");
@@ -88,11 +84,11 @@ async function submitVote() {
     const data = await res.json();
 
     if (res.ok) {
-      alert("✅ Thank you for your vote! Your feedback has been recorded.");
+      alert(" Thank you for your vote! Your feedback has been recorded.");
       form.value = { vote: "", comment: "", imageUrl: "" };
       await fetchNewsById();
     } else {
-      alert("❌ Failed to save your vote: " + data.message);
+      alert(" Failed to save your vote: " + data.message);
     }
   } catch (err) {
     console.error("Error submitting vote:", err);
@@ -102,9 +98,6 @@ async function submitVote() {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/*                              USER SESSION                                 */
-/* -------------------------------------------------------------------------- */
 onMounted(() => {
   const savedUser = localStorage.getItem("user");
   if (savedUser) {
@@ -112,29 +105,25 @@ onMounted(() => {
   }
 });
 
-/* -------------------------------------------------------------------------- */
-/*                            MODAL HANDLERS                                 */
-/* -------------------------------------------------------------------------- */
 function openAddNewsModal() {
   showAddNewsModal.value = true;
 }
-
 function closeAddNewsModal() {
   showAddNewsModal.value = false;
 }
-
-function handleSaveNews(newItem: any) {
-  console.log("New News Added:", newItem);
-  alert("News added successfully!");
+function handleSaveNews(newItem: NewsItem) {
+  console.log("📰 New News Added from Vote Page:", newItem);
+  alert(" News added successfully!");
+  closeAddNewsModal();
 }
 </script>
 
 <template>
   <div class="flex min-h-screen font-[Outfit] bg-white">
-    <!-- ✅ Sidebar (fixed) -->
+    <!--  Sidebar -->
     <AsideMenu :user="user" @openAddNews="openAddNewsModal" />
 
-    <!-- ✅ Main Content (scroll ได้) -->
+    <!--  Main Content -->
     <div class="flex-1 ml-[80px] px-8 py-6 overflow-y-auto">
       <!-- Loading Spinner -->
       <div
@@ -147,11 +136,11 @@ function handleSaveNews(newItem: any) {
         <p>Loading news...</p>
       </div>
 
-      <!-- ✅ Content -->
+      <!--  Content -->
       <div v-else class="pb-12">
         <!-- Back Button -->
         <router-link
-          :to="`/news/${id}`"
+          to="/"
           class="flex items-center gap-[6px] bg-gray-100 text-black text-[16px] rounded-[8px] px-[20px] py-[10px] max-w-fit cursor-pointer transition-colors duration-300 hover:bg-gray-300"
         >
           <img
@@ -159,10 +148,10 @@ function handleSaveNews(newItem: any) {
             alt="Back Icon"
             class="w-[20px] h-[20px] mr-[5px]"
           />
-          Back to News Detail
+          Back to News List
         </router-link>
 
-        <!-- ✅ Layout -->
+        <!--  Layout -->
         <div
           class="flex flex-col lg:flex-row justify-center gap-6 mt-6 w-full max-w-[800px] mx-auto text-left"
         >
@@ -271,7 +260,7 @@ function handleSaveNews(newItem: any) {
       </div>
     </div>
 
-    <!-- ✅ Add News Modal -->
+    <!--  Add News Modal -->
     <AddNewsModal
       :show="showAddNewsModal"
       :user="user"
@@ -280,4 +269,3 @@ function handleSaveNews(newItem: any) {
     />
   </div>
 </template>
-

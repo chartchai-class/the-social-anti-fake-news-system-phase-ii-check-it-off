@@ -6,17 +6,15 @@ interface NewsItem {
   author: string;
   date: string;
   image: string;
-  description: string; // ข่าวสั้น
-  fullDescription: string; // ข่าวเต็ม
+  description: string;
+  fullDescription: string;
 }
 
-// Props รับค่าจาก parent
 const props = defineProps<{
   show: boolean;
   user: { name: string; surname?: string } | null;
 }>();
 
-// Emits event กลับไปให้ parent
 const emit = defineEmits(["close", "save"]);
 
 const newNews = reactive<NewsItem>({
@@ -28,7 +26,6 @@ const newNews = reactive<NewsItem>({
   fullDescription: "",
 });
 
-// เมื่อ modal เปิด ให้ตั้ง author อัตโนมัติ
 watch(
   () => props.show,
   (newVal) => {
@@ -110,7 +107,7 @@ function clearForm() {
         Add News Article
       </h2>
 
-      <div class="space-y-1">
+      <div class="space-y-1 text-left">
         <!-- Title -->
         <div>
           <label class="block text-xl text-gray-700 font-semibold">Title</label>
@@ -145,7 +142,7 @@ function clearForm() {
             v-model="newNews.date"
             type="date"
             class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-center"
-          />
+          /> 
         </div>
 
         <!-- Image -->
@@ -168,7 +165,7 @@ function clearForm() {
           >
           <textarea
             v-model="newNews.description"
-            rows="3"
+            rows="2"
             class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
             placeholder="Enter short summary (1–3 sentences)..."
           ></textarea>
@@ -181,7 +178,7 @@ function clearForm() {
           >
           <textarea
             v-model="newNews.fullDescription"
-            rows="10"
+            rows="7"
             class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
             placeholder="Enter detailed description..."
           ></textarea>

@@ -8,7 +8,8 @@ import LikeIcon from "@/assets/Card/Like.png";
 import DisLikeIcon from "@/assets/Card/Dislike.png";
 import CommentIcon from "@/assets/Card/Comment.png";
 
-import AsideMenu from "@/components/AsideMenu.vue"; // ✅ ใช้ component จริง
+import AsideMenu from "@/components/AsideMenu.vue";
+import AddNewsModal from "@/components/AddNewsModal.vue";
 
 interface NewsItem {
   id: number;
@@ -21,6 +22,13 @@ interface NewsItem {
   comments?: number;
   fulldescription?: string;
   contentLines: string[];
+}
+
+interface User {
+  name: string;
+  email: string;
+  surname?: string;
+  access?: string;
 }
 
 const route = useRoute();
@@ -41,7 +49,6 @@ const news = ref<NewsItem>({
   contentLines: ["Loading content..."],
 });
 
-// ✅ ดึงข่าวจาก API
 onMounted(async () => {
   try {
     const res = await fetch("http://localhost:5175/api/news");
@@ -69,20 +76,18 @@ onMounted(async () => {
       news.value.title = "News not found";
     }
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error fetching news:", err);
   } finally {
     isLoading.value = false;
   }
 });
 
-// ✅ โหลดรูปจากโฟลเดอร์
 const images = import.meta.glob("@/assets/NewsImages/*.png", { eager: true });
 function getImageById(id: number) {
   const path = `/src/assets/NewsImages/${id}.png`;
   return (images[path] as any)?.default || "";
 }
 
-// ✅ ปุ่มนำทาง
 function goToVote() {
   router.push({ name: "Vote", params: { id: newsId } });
 }
@@ -90,70 +95,35 @@ function goToComment() {
   router.push({ name: "Comment", params: { id: newsId } });
 }
 
-// ✅ จัดการผู้ใช้
-interface User {
-  name: string;
-  email: string;
-  surname?: string;
-  access?: string;
-}
 const user = ref<User | null>(null);
-
 onMounted(() => {
   const savedUser = localStorage.getItem("user");
-  if (savedUser) {
-    user.value = JSON.parse(savedUser);
-  }
+  if (savedUser) user.value = JSON.parse(savedUser);
 });
 
-// ✅ Modal เพิ่มข่าว
 const showAddNewsModal = ref(false);
-const newNews = ref({
-  title: "",
-  author: "",
-  date: "",
-  image: "",
-  description: "",
-});
-
 function openAddNewsModal() {
   showAddNewsModal.value = true;
-  newNews.value.author = user.value
-    ? `${user.value.name} ${user.value.surname || ""}`.trim()
-    : "";
 }
-
 function closeAddNewsModal() {
   showAddNewsModal.value = false;
-  Object.assign(newNews.value, {
-    title: "",
-    author: "",
-    date: "",
-    image: "",
-    description: "",
-  });
 }
 
-function saveNews() {
-  if (!newNews.value.title || !newNews.value.author) {
-    alert("Please fill in at least Title and Author.");
-    return;
-  }
-
-  console.log("📰 New News Added:", newNews.value);
-  alert("News added successfully!");
+function handleSaveNews(newItem: NewsItem) {
+  console.log(" New News Added from NewsDetail:", newItem);
+  alert(" News added successfully!");
   closeAddNewsModal();
 }
 </script>
 
 <template>
   <div class="flex min-h-screen font-[Outfit] bg-white">
-    <!-- ✅ ใช้ AsideMenu.vue -->
+    <!--  Sidebar -->
     <AsideMenu :user="user" @openAddNews="openAddNewsModal" />
 
-    <!-- ✅ Main Content -->
+    <!--  Main Content -->
     <div class="flex-1 ml-[80px] px-8 py-6">
-      <!-- ✅ Loading Spinner -->
+      <!--  Loading Spinner -->
       <div
         v-if="isLoading"
         class="fixed inset-0 bg-white/95 flex flex-col items-center justify-center z-[9999] text-center text-[18px] text-[#333]"
@@ -164,8 +134,9 @@ function saveNews() {
         <p>Loading news...</p>
       </div>
 
-      <!-- ✅ Main Content -->
+      <!--  Main Content -->
       <div v-else>
+        <!-- Back Button -->
         <router-link
           to="/"
           class="flex items-center gap-[6px] bg-gray-100 text-black text-[16px] rounded-[8px] px-[20px] py-[10px] max-w-fit cursor-pointer transition-colors duration-300 hover:bg-gray-300"
@@ -178,6 +149,7 @@ function saveNews() {
           Back to News List
         </router-link>
 
+        <!-- News Detail Card -->
         <div
           class="text-black mt-[10px] bg-white border border-gray-300 rounded-[8px] shadow-[0_4px_10px_rgba(0,0,0,0.15)] min-h-[650px] text-left p-[20px]"
         >
@@ -210,19 +182,28 @@ function saveNews() {
 
           <!-- Votes -->
           <div class="flex gap-[12px] mt-[15px] ml-[20px]">
-            <span class="inline-flex items-center gap-[6px] font-medium bg-green-50 rounded-[6px] px-3 py-1">
+            <span
+              class="inline-flex items-center gap-[6px] font-medium bg-green-50 rounded-[6px] px-3 py-1"
+            >
               <img :src="LikeIcon" class="w-5 h-5" /> {{ news.upVotes }}
             </span>
-            <span class="inline-flex items-center gap-[6px] font-medium bg-red-50 rounded-[6px] px-3 py-1">
+            <span
+              class="inline-flex items-center gap-[6px] font-medium bg-red-50 rounded-[6px] px-3 py-1"
+            >
               <img :src="DisLikeIcon" class="w-5 h-5" /> {{ news.downVotes }}
             </span>
-            <span class="inline-flex items-center gap-[6px] font-medium bg-gray-100 rounded-[6px] px-3 py-1">
+            <span
+              class="inline-flex items-center gap-[6px] font-medium bg-gray-100 rounded-[6px] px-3 py-1"
+            >
               <img :src="CommentIcon" class="w-5 h-5" /> {{ news.comments }} Comments
             </span>
           </div>
 
           <!-- Image -->
-          <div class="w-full flex justify-center my-[15px]" v-if="getImageById(news.id)">
+          <div
+            class="w-full flex justify-center my-[15px]"
+            v-if="getImageById(news.id)"
+          >
             <img
               :src="getImageById(news.id)"
               alt="News Image"
@@ -230,8 +211,10 @@ function saveNews() {
             />
           </div>
 
-          <!-- Description -->
-          <div class="text-[17px] w-[820px] mt-[20px] ml-[20px] mb-[20px] pb-[20px] border-b-2 border-gray-200">
+          <!-- Full Description -->
+          <div
+            class="text-[17px] w-[820px] mt-[20px] ml-[20px] mb-[20px] pb-[20px] border-b-2 border-gray-200"
+          >
             {{ news.fulldescription }}
           </div>
 
@@ -254,85 +237,12 @@ function saveNews() {
       </div>
     </div>
 
-    <!-- ✅ Modal -->
-    <div
-      v-if="showAddNewsModal"
-      class="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]"
-    >
-      <div
-        class="bg-white w-[600px] h-[800px] rounded-2xl shadow-xl p-6 font-[Outfit] animate-fade-in overflow-y-auto"
-      >
-        <h2 class="text-3xl font-bold text-gray-800 mb-4 text-center">
-          Add News Article
-        </h2>
-
-        <div class="space-y-3">
-          <div>
-            <label class="block text-xl text-gray-700 font-semibold mb-1">Title</label>
-            <input
-              v-model="newNews.title"
-              type="text"
-              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Enter news title"
-            />
-          </div>
-
-          <div>
-            <label class="block text-xl text-gray-700 font-semibold mb-1">Author</label>
-            <input
-              v-model="newNews.author"
-              type="text"
-              readonly
-              class="w-full border border-gray-200 bg-gray-100 text-gray-600 rounded-md px-3 py-2 focus:outline-none cursor-not-allowed select-none"
-              placeholder="Author name"
-            />
-          </div>
-
-          <div class="flex flex-col items-center">
-            <label class="block text-gray-700 font-semibold mb-1 text-center text-xl">Date</label>
-            <input
-              v-model="newNews.date"
-              type="date"
-              class="w-[250px] border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-center"
-            />
-          </div>
-
-          <div>
-            <label class="block text-gray-700 font-semibold mb-1 text-xl">Image URL</label>
-            <input
-              v-model="newNews.image"
-              type="text"
-              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Paste image link"
-            />
-          </div>
-
-          <div>
-            <label class="block text-gray-700 font-semibold mb-1 text-xl">Full Description</label>
-            <textarea
-              v-model="newNews.description"
-              rows="4"
-              class="w-full h-[250px] border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
-              placeholder="Enter detailed description..."
-            ></textarea>
-          </div>
-        </div>
-
-        <div class="flex justify-end gap-4 mt-6">
-          <button
-            @click="closeAddNewsModal"
-            class="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md transition"
-          >
-            Cancel
-          </button>
-          <button
-            @click="saveNews"
-            class="px-5 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition"
-          >
-            Save
-          </button>
-        </div>
-      </div>
-    </div>
+    <!--  Add News Modal -->
+    <AddNewsModal
+      :show="showAddNewsModal"
+      :user="user"
+      @close="closeAddNewsModal"
+      @save="handleSaveNews"
+    />
   </div>
 </template>
