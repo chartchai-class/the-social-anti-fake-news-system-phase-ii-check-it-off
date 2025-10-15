@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
 import LikeIcon from "@/assets/Card/Like.png";
 import DislikeIcon from "@/assets/Card/Dislike.png";
 import CommentIcon from "@/assets/Card/Comment.png";
 import AsideMenu from "@/components/AsideMenu.vue"; // ✅ ใช้ component เดิม
 
-const router = useRouter();
 const route = useRoute();
 const id = Number(route.params.id);
 
