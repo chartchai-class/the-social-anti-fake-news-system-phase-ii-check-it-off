@@ -56,7 +56,12 @@ onMounted(async () => {
 
     const data = await res.json();
     if (data.news && Array.isArray(data.news)) {
-      newsList.value = data.news;
+      newsList.value = data.news
+        .filter((n: any) => n.date) // เอาเฉพาะข่าวที่มี date
+        .sort(
+          (a: any, b: any) =>
+            new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
     } else {
       error.value = "No news data found from Google Sheet";
     }
