@@ -4,6 +4,7 @@ import NewsDetail from "@/pages/NewsDetail.vue";
 import Vote from "@/pages/Vote.vue";
 import Comment from "@/pages/Comment.vue";
 import Login from "@/pages/Login.vue";
+import NewsManage from "@/pages/AdminDashboard/NewsManage.vue";
 
 const routes = [
   { path: "/", name: "Home", component: Home },
@@ -11,6 +12,11 @@ const routes = [
   { path: "/vote/:id", name: "Vote", component: Vote },
   { path: "/comment/:id", name: "Comment", component: Comment },
   { path: "/login", name: "Login", component: Login },
+  {
+    path: "/admin/manage-news",
+    name: "NewsManage",
+    component: NewsManage,
+  },
 ];
 
 export default createRouter({

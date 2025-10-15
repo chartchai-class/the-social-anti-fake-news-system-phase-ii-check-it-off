@@ -2,18 +2,11 @@
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 
-// Props รับค่ามาจาก parent
 const props = defineProps<{
-  user: {
-    name: string;
-    surname?: string;
-    access?: string;
-  } | null;
+  user: { name: string; surname?: string; access?: string } | null;
 }>();
 
-// Emits เพื่อบอก parent ให้เปิด AddNews Modal
 const emit = defineEmits(["openAddNews"]);
-
 const router = useRouter();
 
 const firstLetter = computed(() =>
@@ -49,28 +42,28 @@ const adminButtons = [
     title: "Delete existing news",
     icon: new URL("@/assets/Aside/delete-news.png", import.meta.url).href,
     colorClass: "bg-[#5AC5F0] text-[#6B2E2E]",
-    action: () => router.push("/admin/delete-news"),
+    action: () => router.push("/admin/manage-news"),
   },
   {
     label: "Del User",
     title: "Delete a user account",
     icon: new URL("@/assets/Aside/delete-user.png", import.meta.url).href,
     colorClass: "bg-[#D70000] text-[#6B2E2E]",
-    action: () => router.push("/admin/delete-user"),
+    action: () => router.push("/admin/users"),
   },
   {
     label: "Del Comment",
     title: "Delete comment",
     icon: new URL("@/assets/Aside/delete-comment.png", import.meta.url).href,
     colorClass: "bg-[#FF7801] text-[#6B2E2E]",
-    action: () => router.push("/admin/delete-comment"),
+    action: () => router.push("/admin/comments"),
   },
   {
     label: "Change Role",
     title: "Change user role",
     icon: new URL("@/assets/Aside/change-user-role.png", import.meta.url).href,
     colorClass: "bg-[#FFC800] text-[#6B2E2E]",
-    action: () => router.push("/admin/change-role"),
+    action: () => router.push("/admin/roles"),
   },
 ];
 </script>
@@ -182,9 +175,7 @@ const adminButtons = [
       <div
         class="bg-white rounded-2xl shadow-lg w-[350px] p-6 text-center font-[Outfit] animate-fade-in"
       >
-        <h2 class="text-xl font-semibold text-gray-800 mb-3">
-          Confirm Logout
-        </h2>
+        <h2 class="text-xl font-semibold text-gray-800 mb-3">Confirm Logout</h2>
         <p class="text-gray-600 mb-6">
           Are you sure you want to log out of your account?
         </p>
