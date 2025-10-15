@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, watch, reactive } from "vue";
+import { watch, reactive } from "vue";
 
 interface NewsItem {
   title: string;
   author: string;
   date: string;
   image: string;
-  description: string;
+  description: string; // ข่าวสั้น
+  fullDescription: string; // ข่าวเต็ม
 }
 
 // Props รับค่าจาก parent
@@ -24,6 +25,7 @@ const newNews = reactive<NewsItem>({
   date: "",
   image: "",
   description: "",
+  fullDescription: "",
 });
 
 // เมื่อ modal เปิด ให้ตั้ง author อัตโนมัติ
@@ -44,19 +46,55 @@ function closeModal() {
     date: "",
     image: "",
     description: "",
+    fullDescription: "",
   });
 }
 
-function saveNews() {
-  if (!newNews.title || !newNews.author) {
-    alert("Please fill in at least Title and Author.");
+async function saveNews() {
+  if (!newNews.title || !newNews.author || !newNews.date) {
+    alert("Please fill in Title, Author, and Date.");
     return;
   }
-  emit("save", { ...newNews });
-  closeModal();
+
+  try {
+    const res = await fetch("http://localhost:5175/api/news", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: newNews.title,
+        author: newNews.author,
+        date: newNews.date,
+        image: newNews.image,
+        description: newNews.description, // ข่าวสั้น
+        fullDescription: newNews.fullDescription, // ข่าวเต็ม
+        upVotes: 0,
+        downVotes: 0,
+        comments: 0,
+        mockUpvote: 0,
+        mockDownvote: 0,
+      }),
+    });
+
+    if (!res.ok) throw new Error("Failed to add news");
+
+    alert("✅ News added successfully!");
+    emit("save", { ...newNews });
+    closeModal();
+  } catch (error) {
+    console.error("❌ Error:", error);
+    alert("Failed to add news.");
+  }
 }
 
-
+function clearForm() {
+  Object.assign(newNews, {
+    title: "",
+    date: "",
+    image: "",
+    description: "",
+    fullDescription: "",
+  });
+}
 </script>
 
 <template>
@@ -66,18 +104,16 @@ function saveNews() {
     @click.self="closeModal"
   >
     <div
-      class="bg-white w-[600px] h-[800px] rounded-2xl shadow-xl p-6 font-[Outfit] animate-fade-in"
+      class="bg-white w-[650px] rounded-2xl shadow-xl p-8 font-[Outfit] animate-fade-in"
     >
-      <h2 class="text-3xl font-bold text-gray-800 mb-4 text-center">
+      <h2 class="text-3xl font-bold text-gray-800 text-center">
         Add News Article
       </h2>
 
-      <div class="space-y-3">
+      <div class="space-y-1">
+        <!-- Title -->
         <div>
-          <label
-            class="block text-xl text-gray-700 font-semibold mb-1 font-weight-500"
-            >Title</label
-          >
+          <label class="block text-xl text-gray-700 font-semibold">Title</label>
           <input
             v-model="newNews.title"
             type="text"
@@ -86,22 +122,23 @@ function saveNews() {
           />
         </div>
 
+        <!-- Author -->
         <div>
-          <label class="block text-xl text-gray-700 font-semibold mb-1"
+          <label class="block text-xl text-gray-700 font-semibold mt-2"
             >Author</label
           >
           <input
             v-model="newNews.author"
             type="text"
             readonly
-            class="w-full border border-gray-200 bg-gray-100 text-gray-600 rounded-md px-3 py-2 focus:outline-none cursor-not-allowed select-none"
+            class="w-full border border-gray-200 bg-gray-100 text-gray-600 rounded-md px-3 py-2 cursor-not-allowed select-none"
             placeholder="Author name"
           />
         </div>
 
-        <div class="flex flex-col items-center">
-          <label
-            class="block text-gray-700 font-semibold mb-1 text-center text-xl"
+        <!-- Date -->
+        <div>
+          <label class="block text-xl text-gray-700 font-semibold mt-2"
             >Date</label
           >
           <input
@@ -111,8 +148,9 @@ function saveNews() {
           />
         </div>
 
+        <!-- Image -->
         <div>
-          <label class="block text-gray-700 font-semibold mb-1 text-xl"
+          <label class="block text-xl text-gray-700 font-semibold mt-2"
             >Image URL</label
           >
           <input
@@ -123,32 +161,57 @@ function saveNews() {
           />
         </div>
 
+        <!-- Short Description -->
         <div>
-          <label class="block text-gray-700 font-semibold mb-1 text-xl"
-            >Full Description</label
+          <label class="block text-xl text-gray-700 font-semibold mt-2"
+            >Short Description</label
           >
           <textarea
             v-model="newNews.description"
-            rows="4"
-            class="w-full h-[250px] border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+            rows="3"
+            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+            placeholder="Enter short summary (1–3 sentences)..."
+          ></textarea>
+        </div>
+
+        <!-- Full Description -->
+        <div>
+          <label class="block text-xl text-gray-700 font-semibold"
+            >Full Description</label
+          >
+          <textarea
+            v-model="newNews.fullDescription"
+            rows="10"
+            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
             placeholder="Enter detailed description..."
           ></textarea>
         </div>
       </div>
 
-      <div class="flex justify-end gap-4 mt-6">
+      <!-- Buttons -->
+      <div class="flex justify-between items-center mt-8">
+        <!-- Left: Clear -->
         <button
-          @click="closeModal"
-          class="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md transition"
+          @click="clearForm"
+          class="px-6 py-2 bg-red-700 hover:bg-red-800 text-white rounded-md transition"
         >
-          Cancel
+          Clear
         </button>
-        <button
-          @click="saveNews"
-          class="px-5 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition"
-        >
-          Save
-        </button>
+        <!-- Right: Cancel + Save -->
+        <div class="flex gap-4">
+          <button
+            @click="closeModal"
+            class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md transition"
+          >
+            Cancel
+          </button>
+          <button
+            @click="saveNews"
+            class="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition"
+          >
+            Save
+          </button>
+        </div>
       </div>
     </div>
   </div>

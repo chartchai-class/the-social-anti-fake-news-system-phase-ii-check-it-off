@@ -182,7 +182,9 @@ app.post("/api/register", async (req, res) => {
             surname,
             email,
             password,
-            `=IF(INDIRECT("G"&${newId + 1})="", "", IF(INDIRECT("G"&${newId + 1})>3, "Member", "Reader"))`,
+            `=IF(INDIRECT("G"&${newId + 1})="", "", IF(INDIRECT("G"&${
+              newId + 1
+            })>3, "Member", "Reader"))`,
             `=COUNTIF(Sheet2!B:B, INDIRECT("J" & ${newId + 1}))`,
             0,
           ],
@@ -248,6 +250,78 @@ app.post("/api/login", async (req, res) => {
   } catch (error) {
     console.error(" Error reading Google Sheets:", error);
     res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+// ✅ POST /api/news
+app.post("/api/news", async (req, res) => {
+  try {
+    const {
+      id,
+      title,
+      stats,
+      description,
+      author,
+      image,
+      date,
+      upVotes,
+      downVotes,
+      comments,
+      fullDescription,
+      mockUpvote,
+      mockDownvote,
+    } = req.body;
+
+    // ตรวจสอบค่าบังคับ
+    if (!title || !author || !date) {
+      return res.status(400).json({ message: "Missing required fields." });
+    }
+
+    // ดึงข้อมูลทั้งหมดเพื่อหาล่าสุด (หา id ใหม่)
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${SHEET_NAME}!A:A`,
+    });
+
+    const rows = response.data.values || [];
+    const newId = rows.length + 1;
+
+    const statsFormula = `=IF(H${newId}>I${newId},"Verified",IF(I${newId}>H${newId},"Fake News","Unverified"))`;
+    const voteupFormula = `=M${newId} + Sheet2!I${newId}`;
+    const votedownFormula = `=N${newId} + Sheet2!J${newId}`;
+    const countcommentFormula = `=COUNTIF(Sheet2!A2:A, ${newId})`;
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: "Sheet1!A1", // ✅ เริ่มใส่จากคอลัมน์ A เสมอ
+      valueInputOption: "USER_ENTERED",
+      insertDataOption: "INSERT_ROWS", // ✅ บังคับให้เพิ่มแถวใหม่
+      requestBody: {
+        values: [
+          [
+            newId,
+            title,
+            statsFormula,
+            description || "",
+            author,
+            image || "",
+            date,
+            voteupFormula,
+            votedownFormula,
+            countcommentFormula,
+            fullDescription || "",
+            "",
+            mockUpvote || 0,
+            mockDownvote || 0,
+          ],
+        ],
+      },
+    });
+
+    res.status(200).json({ message: "News added successfully!" });
+  } catch (error) {
+    console.error("❌ Error adding news:", error);
+    res.status(500).json({ message: "Failed to add news." });
   }
 });
 
