@@ -64,12 +64,6 @@ function handleItemsChange() {
   console.log(`User selected: ${itemsPerPage.value} items per page`);
 }
 
-function loadMore() {
-  const nextVisible = visibleItems.value + itemsPerPage.value;
-  visibleItems.value = Math.min(nextVisible, filteredNews.value.length);
-  itemsPerPage.value = visibleItems.value;
-}
-
 function openAddNewsModal() {
   showAddNewsModal.value = true;
 }
@@ -141,7 +135,13 @@ onMounted(() => {
           class="px-2 py-1 rounded-md border border-gray-300 text-base"
           @change="handleItemsChange"
         >
-          <option v-for="n in [6, 12, 24]" :key="n" :value="n">{{ n }}</option>
+          <option
+            v-for="n in [6, 12, 24, 48]"
+            :key="n"
+            :value="n"
+          >
+            {{ n }}
+          </option>
         </select>
       </div>
     </div>
@@ -157,22 +157,6 @@ onMounted(() => {
           :newsList="displayedNews"
         />
       </div>
-    </div>
-
-    <!-- Load More -->
-    <div class="flex justify-center my-6 ml-13">
-      <div
-        v-if="isLoading"
-        class="w-[150px] h-[42px] bg-gray-200 rounded-md animate-pulse"
-      ></div>
-
-      <button
-        v-else-if="visibleItems < filteredNews.length"
-        @click="loadMore"
-        class="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition font-[Outfit]"
-      >
-        More News
-      </button>
     </div>
 
     <!-- Footer -->
