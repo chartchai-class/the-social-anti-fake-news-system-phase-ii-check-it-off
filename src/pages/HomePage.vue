@@ -39,6 +39,7 @@ const allNews = ref<NewsItem[]>(
 
 const user = ref<User | null>(null);
 const visibleItems = ref(itemsPerPage.value);
+
 const showAddNewsModal = ref(false);
 
 const filteredNews = computed(() => {
