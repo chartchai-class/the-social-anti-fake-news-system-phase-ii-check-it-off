@@ -2,7 +2,6 @@
 import { ref, computed, onMounted, watch } from "vue";
 import Header from "../components/Header.vue";
 import NewsList from "../components/NewsList.vue";
-import Footer from "../components/Footer.vue";
 import AsideMenu from "../components/AsideMenu.vue";
 import AddNewsModal from "../components/AddNewsModal.vue";
 
@@ -136,7 +135,7 @@ onMounted(() => {
           @change="handleItemsChange"
         >
           <option
-            v-for="n in [6, 12, 24, 48]"
+            v-for="n in [6, 12, 18]"
             :key="n"
             :value="n"
           >
@@ -158,13 +157,6 @@ onMounted(() => {
         />
       </div>
     </div>
-
-    <!-- Footer -->
-    <div
-      v-if="isLoading"
-      class="w-full h-[100px] bg-gray-100 animate-pulse"
-    ></div>
-    <Footer v-else />
 
     <!-- Add News Modal -->
     <AddNewsModal

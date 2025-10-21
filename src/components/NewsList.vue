@@ -99,9 +99,50 @@ watch(
   }
 );
 
-const paginatedNews = computed(() =>
-  filteredNews.value.slice(0, visibleItems.value)
+const currentPage = ref(1);
+const direction = ref<"left" | "right">("left");
+const previousPage = ref(1);
+
+const totalPages = computed(() =>
+  Math.ceil(filteredNews.value.length / props.itemsPerPage)
 );
+
+const paginatedNews = computed(() => {
+  const start = (currentPage.value - 1) * props.itemsPerPage;
+  const end = start + props.itemsPerPage;
+  return filteredNews.value.slice(start, end);
+});
+
+watch(
+  () => props.filterIndex,
+  () => {
+    currentPage.value = 1;
+  }
+);
+
+function goToPage(page: number) {
+  if (page >= 1 && page <= totalPages.value) {
+    direction.value = page > currentPage.value ? "left" : "right";
+    previousPage.value = currentPage.value;
+    currentPage.value = page;
+  }
+}
+
+function nextPage() {
+  if (currentPage.value < totalPages.value) {
+    direction.value = "left";
+    previousPage.value = currentPage.value;
+    currentPage.value++;
+  }
+}
+
+function prevPage() {
+  if (currentPage.value > 1) {
+    direction.value = "right";
+    previousPage.value = currentPage.value;
+    currentPage.value--;
+  }
+}
 </script>
 
 <template>
@@ -147,70 +188,141 @@ const paginatedNews = computed(() =>
       No news found.
     </p>
 
-    <div
-      v-else
-      class="grid justify-center gap-6 grid-cols-3 md:grid-cols-3 sm:grid-cols-1"
+    <Transition
+      :name="direction === 'left' ? 'slide-left' : 'slide-right'"
+      mode="out-in"
     >
       <div
-        v-for="item in paginatedNews"
-        :key="item.id"
-        class="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col justify-between transition-all duration-300 ease-in-out leading-[1.3] hover:-translate-y-1 hover:shadow-lg group"
+        :key="currentPage"
+        class="grid gap-6 grid-cols-3 md:grid-cols-3 sm:grid-cols-1 items-stretch"
       >
-        <div class="flex justify-between items-start text-left">
-          <h2
-            class="text-xl font-semibold m-0 text-gray-900 transition-colors duration-300 group-hover:text-blue-500 news-title"
-          >
-            {{ item.title }}
-          </h2>
-          <span
-            class="text-sm px-2 py-1 rounded-lg font-medium whitespace-nowrap text-right"
-            :class="{
-              'bg-green-100 text-green-800': item.category === 'Verified',
-              'bg-red-100 text-red-700': item.category === 'Fake News',
-              'bg-yellow-100 text-yellow-600':
-                item.category === 'Under Review' || item.category === 'Unverified',
-            }"
-          >
-            {{ item.category }}
-          </span>
-        </div>
-
-        <p
-          class="mt-4 mb-[0.1rem] text-gray-700 text-base text-left news-description"
+        <div
+          v-for="item in paginatedNews"
+          :key="item.id"
+          class="h-[300px] bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col justify-between transition-all duration-300 ease-in-out leading-[1.3] hover:-translate-y-1 hover:shadow-lg group"
         >
-          {{ item.description }}
-        </p>
-        <p class="mt-4 mb-[0.1rem] text-gray-500 text-sm text-left news-meta">
-          By {{ item.author }} • {{ item.date }}
-        </p>
-
-        <div class="mt-4 news-footer">
-          <div class="flex gap-4 mb-3 news-category">
-            <span class="flex items-center gap-1 text-green-500">
-              <img :src="LikeIcon" alt="Like" class="w-5 h-5" />
-              {{ item.upVotes }}
-            </span>
-
-            <span class="flex items-center gap-1 text-red-600">
-              <img :src="DislikeIcon" alt="Dislike" class="w-5 h-5" />
-              {{ item.downVotes }}
-            </span>
-
-            <span class="flex items-center gap-1 text-gray-600">
-              <img :src="CommentIcon" alt="Comment" class="w-5 h-5" />
-              {{ item.commentsCount }}
+          <div class="flex justify-between items-start text-left">
+            <h2
+              class="text-xl font-semibold m-0 text-gray-900 transition-colors duration-300 group-hover:text-blue-500 line-clamp-2 h-[56px] leading-snug"
+            >
+              {{ item.title }}
+            </h2>
+            <span
+              class="text-sm px-2 py-1 rounded-lg font-medium whitespace-nowrap text-right"
+              :class="{
+                'bg-green-100 text-green-800': item.category === 'Verified',
+                'bg-red-100 text-red-700': item.category === 'Fake News',
+                'bg-yellow-100 text-yellow-600':
+                  item.category === 'Under Review' ||
+                  item.category === 'Unverified',
+              }"
+            >
+              {{ item.category }}
             </span>
           </div>
 
-          <button
-            class="w-full h-10 border border-gray-200 bg-gray-100 rounded-lg cursor-pointer transition-colors duration-300 ease-in-out hover:!bg-blue-600 hover:!text-white"
-            @click="goToDetail(item.id)"
+          <p
+            class="mt-3 text-gray-700 text-base text-left line-clamp-3 h-[72px]"
           >
-            View Details
-          </button>
+            {{ item.description }}
+          </p>
+          <p class="mt-4 mb-[0.1rem] text-gray-500 text-sm text-left news-meta">
+            By {{ item.author }} • {{ item.date }}
+          </p>
+
+          <div class="mt-4 news-footer">
+            <div class="flex gap-4 mb-3 news-category">
+              <span class="flex items-center gap-1 text-green-500">
+                <img :src="LikeIcon" alt="Like" class="w-5 h-5" />
+                {{ item.upVotes }}
+              </span>
+
+              <span class="flex items-center gap-1 text-red-600">
+                <img :src="DislikeIcon" alt="Dislike" class="w-5 h-5" />
+                {{ item.downVotes }}
+              </span>
+
+              <span class="flex items-center gap-1 text-gray-600">
+                <img :src="CommentIcon" alt="Comment" class="w-5 h-5" />
+                {{ item.commentsCount }}
+              </span>
+            </div>
+
+            <button
+              class="w-full h-10 border border-gray-200 bg-gray-100 rounded-lg cursor-pointer transition-colors duration-300 ease-in-out hover:!bg-blue-600 hover:!text-white"
+              @click="goToDetail(item.id)"
+            >
+              View Details
+            </button>
+          </div>
         </div>
       </div>
+    </Transition>
+
+    <div
+      v-if="totalPages > 1"
+      class="flex justify-center items-center gap-2 mt-8 select-none"
+    >
+      <button
+        class="px-3 py-1 rounded-lg border text-sm transition disabled:opacity-50 hover:bg-gray-100"
+        :disabled="currentPage === 1"
+        @click="prevPage"
+      >
+        ← Prev
+      </button>
+
+      <button
+        v-for="page in totalPages"
+        :key="page"
+        class="px-3 py-1 rounded-lg text-sm font-medium transition"
+        :class="
+          page === currentPage
+            ? 'bg-blue-600 text-white'
+            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+        "
+        @click="goToPage(page)"
+      >
+        {{ page }}
+      </button>
+
+      <button
+        class="px-3 py-1 rounded-lg border text-sm transition disabled:opacity-50 hover:bg-gray-100"
+        :disabled="currentPage === totalPages"
+        @click="nextPage"
+      >
+        Next →
+      </button>
     </div>
   </div>
 </template>
 
+<style scoped>
+.slide-left-enter-active,
+.slide-left-leave-active {
+  transition: all 0.6s ease;
+  position: relative;
+}
+
+.slide-left-enter-from {
+  opacity: 0;
+  transform: translateX(40px);
+}
+.slide-left-leave-to {
+  opacity: 0;
+  transform: translateX(-40px);
+}
+
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: all 0.5s ease;
+  position: relative;
+}
+.slide-right-enter-from {
+  opacity: 0;
+  transform: translateX(-40px);
+}
+.slide-right-leave-to {
+  opacity: 0;
+  transform: translateX(40px);
+}
+</style>
