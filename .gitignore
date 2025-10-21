@@ -1,4 +1,6 @@
+# ==========================
 # Logs
+# ==========================
 logs
 *.log
 npm-debug.log*
@@ -7,23 +9,31 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# ==========================
 # Dependencies & build outputs
+# ==========================
 node_modules/
 dist/
 dist-ssr/
 *.local
 
+# ==========================
 # Environment & Secret files
+# ==========================
 .env
 .env.*
 secret/
 *.json
 
+# ==========================
 # Optional local server files
+# ==========================
 /tmp
 /temp
 
+# ==========================
 # Editor & OS files
+# ==========================
 .vscode/*
 !.vscode/extensions.json
 .idea/
@@ -33,3 +43,9 @@ secret/
 *.njsproj
 *.sln
 *.sw?
+
+# ==========================
+# Docker & MySQL
+# ==========================
+# Ignore MySQL data volume to prevent tracking binary/database files
+src/checkitoff-db/mysql_data/
