@@ -21,13 +21,14 @@ interface Props {
     id: number;
     title: string;
     category: string;
-    stats?: string;
     description?: string;
     author?: string;
     date?: string;
+    image?: string;
     upVotes?: number;
     downVotes?: number;
-    comments?: number;
+    commentsCount?: number;
+    fullDescription?: string;
   }>;
 }
 const props = defineProps<Props>();
@@ -35,13 +36,15 @@ const props = defineProps<Props>();
 interface NewsItem {
   id: number;
   title: string;
-  stats: string;
+  category: string;
   description: string;
   author: string;
   date: string;
+  image: string;
   upVotes: number;
   downVotes: number;
-  comments: number;
+  commentsCount: number;
+  fullDescription?: string;
 }
 
 const newsList = ref<NewsItem[]>([]);
@@ -51,13 +54,13 @@ const visibleItems = ref(props.itemsPerPage);
 
 onMounted(async () => {
   try {
-    const res = await fetch("http://localhost:5175/api/news");
+    const res = await fetch("http://localhost/checkitoff/api/news.php");
     if (!res.ok) throw new Error("Failed to fetch data");
 
     const data = await res.json();
     if (data.news && Array.isArray(data.news)) {
       newsList.value = data.news
-        .filter((n: any) => n.date) // เอาเฉพาะข่าวที่มี date
+        .filter((n: any) => n.date)
         .sort(
           (a: any, b: any) =>
             new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -79,7 +82,7 @@ const filteredNews = computed(() => {
     return newsList.value;
   const statusMap = ["Verified", "Fake News", "Unverified"];
   const status = statusMap[props.filterIndex - 1];
-  return newsList.value.filter((n) => n.stats === status);
+  return newsList.value.filter((n) => n.category === status);
 });
 
 watch(
@@ -162,13 +165,13 @@ const paginatedNews = computed(() =>
           <span
             class="text-sm px-2 py-1 rounded-lg font-medium whitespace-nowrap text-right"
             :class="{
-              'bg-green-100 text-green-800': item.stats === 'Verified',
-              'bg-red-100 text-red-700': item.stats === 'Fake News',
+              'bg-green-100 text-green-800': item.category === 'Verified',
+              'bg-red-100 text-red-700': item.category === 'Fake News',
               'bg-yellow-100 text-yellow-600':
-                item.stats === 'Under Review' || item.stats === 'Unverified',
+                item.category === 'Under Review' || item.category === 'Unverified',
             }"
           >
-            {{ item.stats }}
+            {{ item.category }}
           </span>
         </div>
 
@@ -182,7 +185,7 @@ const paginatedNews = computed(() =>
         </p>
 
         <div class="mt-4 news-footer">
-          <div class="flex gap-4 mb-3 news-stats">
+          <div class="flex gap-4 mb-3 news-category">
             <span class="flex items-center gap-1 text-green-500">
               <img :src="LikeIcon" alt="Like" class="w-5 h-5" />
               {{ item.upVotes }}
@@ -195,7 +198,7 @@ const paginatedNews = computed(() =>
 
             <span class="flex items-center gap-1 text-gray-600">
               <img :src="CommentIcon" alt="Comment" class="w-5 h-5" />
-              {{ item.comments }}
+              {{ item.commentsCount }}
             </span>
           </div>
 
