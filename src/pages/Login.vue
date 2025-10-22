@@ -19,6 +19,7 @@
           <form
             class="w-[500px] space-y-6 mx-auto"
             @submit.prevent="handleLogin"
+            @keydown.enter.prevent
           >
             <div>
               <label
@@ -270,7 +271,8 @@ const email = ref("");
 const password = ref("");
 const loginEmail = ref("");
 const loginPassword = ref("");
-const errors = ref({});
+const errors = ref({ name: "", surname: "", email: "", password: "" });
+const role = ref("READER");
 
 function toggleSignUp() {
   isSignUp.value = !isSignUp.value;
@@ -304,9 +306,9 @@ const loginSchema = yup.object({
 });
 
 async function handleCreateAccount() {
-  try {
-    errors.value = {};
+  errors.value = {};
 
+  try {
     await signUpSchema.validate(
       {
         name: name.value,
@@ -317,7 +319,7 @@ async function handleCreateAccount() {
       { abortEarly: false }
     );
 
-    const response = await fetch("http://localhost:5175/api/register", {
+    const res = await fetch("http://127.0.0.1/checkitoff/api/register.php", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -325,30 +327,35 @@ async function handleCreateAccount() {
         surname: surname.value,
         email: email.value,
         password: password.value,
+        role: role.value,
       }),
     });
 
-    const result = await response.json();
+    const text = await res.text();
+    console.log("Raw response (SignUp):", text);
 
-    if (response.ok) {
-      alert(`Your account is ready. Let's get started!`);
-      isSignUp.value = false;
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error("Server response is not valid JSON");
+    }
 
+    if (data.success) {
+      alert("🌟 Your account has been created successfully!");
       name.value = "";
       surname.value = "";
       email.value = "";
       password.value = "";
+      isSignUp.value = false;
     } else {
-      alert(
-        ` Failed to register: ${result.message || "Unexpected issue occurred."}`
-      );
+      alert(`${data.message}`);
     }
   } catch (err) {
     if (err.inner) {
       err.inner.forEach((e) => (errors.value[e.path] = e.message));
     } else {
-      console.error(" Server Error:", err);
-      alert("We’re having trouble connecting. Please try again later.");
+      alert(" Cannot connect to server or invalid response.");
     }
   }
 }
@@ -362,7 +369,7 @@ async function handleLogin() {
       { abortEarly: false }
     );
 
-    const response = await fetch("http://localhost:5175/api/login", {
+    const response = await fetch("http://127.0.0.1/checkitoff/api/login.php", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -394,7 +401,7 @@ async function handleLogin() {
       localStorage.setItem("user", JSON.stringify(userData));
 
       if (isAdmin) {
-        alert(`🛠️ Welcome Admin, ${result.name || "User"}!`);
+        alert(` Welcome Admin, ${result.name || "User"}!`);
         window.location.href = "/admin";
       } else {
         alert(
