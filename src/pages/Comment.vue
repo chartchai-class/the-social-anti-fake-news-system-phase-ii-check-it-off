@@ -39,21 +39,25 @@ const user = ref<User | null>(null);
 
 onMounted(async () => {
   try {
-    const res = await fetch("http://localhost:5175/api/news");
+    const res = await fetch(
+      `http://localhost/checkitoff/api/news.php?id=${id}`
+    );
     const data = await res.json();
-    const selected = data.news.find((n: any) => Number(n.id) === id);
-    if (selected) {
+
+    if (data.news) {
       news.value = {
-        id: selected.id,
-        upVotes: selected.upVotes || 0,
-        downVotes: selected.downVotes || 0,
-        comments: selected.comments || 0,
+        id: data.news.id,
+        upVotes: data.news.upVotes || 0,
+        downVotes: data.news.downVotes || 0,
+        comments: data.news.commentsCount || 0,
       };
     }
 
-    const res2 = await fetch("http://localhost:5175/api/comments");
+    const res2 = await fetch(
+      `http://localhost/checkitoff/api/comments.php?news_id=${id}`
+    );
     const data2 = await res2.json();
-    comments.value = data2.comments.filter((c: CommentItem) => Number(c.id) === id);
+    comments.value = data2.comments;
   } catch (err) {
     console.error(" Error fetching data:", err);
   } finally {
@@ -143,7 +147,9 @@ function handleSaveNews(newItem: any) {
           Comments & Votes
         </h1>
 
-        <div v-if="isLoadingComments" class="text-gray-500">Loading comments...</div>
+        <div v-if="isLoadingComments" class="text-gray-500">
+          Loading comments...
+        </div>
         <div
           v-else-if="comments.length === 0"
           class="text-center text-[#666] italic mt-3"
