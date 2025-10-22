@@ -8,6 +8,7 @@ import AsideMenu from "@/components/AsideMenu.vue";
 import AddNewsModal from "@/components/AddNewsModal.vue";
 
 interface User {
+  id: number;
   name: string;
   email: string;
   surname?: string;
@@ -41,12 +42,26 @@ const form = ref({
 
 async function fetchNewsById() {
   try {
-    const res = await fetch("http://localhost:5175/api/news");
+    const res = await fetch(`http://localhost/checkitoff/api/news.php?id=${id}`);
     if (!res.ok) throw new Error("Failed to fetch news");
 
     const data = await res.json();
-    const selected = data.news.find((n: any) => Number(n.id) === id);
-    news.value = selected || null;
+
+    if (data.news) {
+      news.value = {
+        id: Number(data.news.id),
+        title: data.news.title,
+        author: data.news.author,
+        date: data.news.date,
+        image: data.news.image,
+        description: data.news.description,
+        upVotes: Number(data.news.upVotes) || 0,
+        downVotes: Number(data.news.downVotes) || 0,
+      };
+    } else {
+      console.warn("No news found for this ID");
+      news.value = null;
+    }
   } catch (err) {
     console.error("Error fetching news:", err);
     news.value = null;
@@ -55,11 +70,12 @@ async function fetchNewsById() {
   }
 }
 
+
 onMounted(fetchNewsById);
 
 async function submitVote() {
   if (!form.value.comment || !form.value.vote) {
-    alert("⚠️ Please select your vote and add a comment!");
+    alert("Please select your vote and add a comment!");
     return;
   }
 
@@ -67,28 +83,28 @@ async function submitVote() {
   isSubmitting.value = true;
 
   try {
-    const res = await fetch("http://localhost:5175/api/vote", {
+    const res = await fetch("http://localhost/checkitoff/api/vote.php", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        id,
+        news_id: id,
+        user_id: user.value ? (user.value as any).id || 0 : 0,
         name: user.value
           ? `${user.value.name} ${user.value.surname || ""}`
           : "Unknown User",
-        status: form.value.vote,
+        vote: form.value.vote === "up" ? "upvote" : "downvote",
         comment: form.value.comment,
-        imageUrl: form.value.imageUrl || "",
       }),
     });
 
     const data = await res.json();
 
-    if (res.ok) {
-      alert(" Thank you for your vote! Your feedback has been recorded.");
+    if (res.ok && data.success) {
+      alert("Thank you for your vote! Your feedback has been recorded.");
       form.value = { vote: "", comment: "", imageUrl: "" };
       await fetchNewsById();
     } else {
-      alert(" Failed to save your vote: " + data.message);
+      alert("Failed to save your vote: " + (data.message || "Unknown error"));
     }
   } catch (err) {
     console.error("Error submitting vote:", err);
@@ -138,9 +154,9 @@ function handleSaveNews(newItem: NewsItem) {
 
       <!--  Content -->
       <div v-else class="pb-12">
-        <!-- Back Button -->
+        <!-- Back Button --> 
         <router-link
-          to="/"
+          :to="{ name: 'NewsDetail', params: { id } }"
           class="flex items-center gap-[6px] bg-gray-100 text-black text-[16px] rounded-[8px] px-[20px] py-[10px] max-w-fit cursor-pointer transition-colors duration-300 hover:bg-gray-300"
         >
           <img
@@ -148,7 +164,7 @@ function handleSaveNews(newItem: NewsItem) {
             alt="Back Icon"
             class="w-[20px] h-[20px] mr-[5px]"
           />
-          Back to News List
+          Back to News Detail
         </router-link>
 
         <!--  Layout -->
@@ -167,7 +183,8 @@ function handleSaveNews(newItem: NewsItem) {
                 'bg-emerald-100 text-emerald-700': news?.stats === 'Verified',
                 'bg-red-100 text-red-700': news?.stats === 'Fake News',
                 'bg-yellow-100 text-yellow-600':
-                  news?.stats === 'Under Review' || news?.stats === 'Unverified',
+                  news?.stats === 'Under Review' ||
+                  news?.stats === 'Unverified',
               }"
             >
               {{ news?.stats }}
@@ -211,18 +228,22 @@ function handleSaveNews(newItem: NewsItem) {
             <label class="block font-medium mb-[0.3rem] mt-4">Your Vote</label>
             <div class="flex gap-3 mt-[-5px]">
               <button
-                :class="[form.vote === 'up'
-                  ? 'flex-1 rounded-[6px] py-[10px] font-medium bg-green-600 text-white hover:bg-green-700 transition'
-                  : 'flex-1 rounded-[6px] py-[10px] font-medium bg-gray-200 text-black hover:bg-green-600 hover:text-white transition']"
+                :class="[
+                  form.vote === 'up'
+                    ? 'flex-1 rounded-[6px] py-[10px] font-medium bg-green-600 text-white hover:bg-green-700 transition'
+                    : 'flex-1 rounded-[6px] py-[10px] font-medium bg-gray-200 text-black hover:bg-green-600 hover:text-white transition',
+                ]"
                 @click="form.vote = 'up'"
               >
                 This is Real
               </button>
 
               <button
-                :class="[form.vote === 'down'
-                  ? 'flex-1 rounded-[6px] py-[10px] font-medium bg-red-600 text-white hover:bg-red-700 transition'
-                  : 'flex-1 rounded-[6px] py-[10px] font-medium bg-gray-200 text-black hover:bg-red-600 hover:text-white transition']"
+                :class="[
+                  form.vote === 'down'
+                    ? 'flex-1 rounded-[6px] py-[10px] font-medium bg-red-600 text-white hover:bg-red-700 transition'
+                    : 'flex-1 rounded-[6px] py-[10px] font-medium bg-gray-200 text-black hover:bg-red-600 hover:text-white transition',
+                ]"
                 @click="form.vote = 'down'"
               >
                 This is Fake
@@ -230,7 +251,9 @@ function handleSaveNews(newItem: NewsItem) {
             </div>
 
             <!-- Comment -->
-            <label class="block font-medium mb-[0.3rem] mt-4">Your Comment</label>
+            <label class="block font-medium mb-[0.3rem] mt-4"
+              >Your Comment</label
+            >
             <textarea
               v-model="form.comment"
               placeholder="Explain why you think this news is real or fake..."

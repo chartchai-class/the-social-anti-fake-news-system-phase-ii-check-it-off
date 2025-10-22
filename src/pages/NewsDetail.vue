@@ -51,7 +51,7 @@ const news = ref<NewsItem>({
 
 onMounted(async () => {
   try {
-    const res = await fetch("http://localhost:5175/api/news");
+    const res = await fetch("http://localhost/checkitoff/api/news.php");
     if (!res.ok) throw new Error("Failed to fetch news");
 
     const data = await res.json();
@@ -89,9 +89,11 @@ function getImageById(id: number) {
 }
 
 function goToVote() {
+  window.scrollTo({ top: 0, behavior: "smooth" });
   router.push({ name: "Vote", params: { id: newsId } });
 }
 function goToComment() {
+  window.scrollTo({ top: 0, behavior: "smooth" });
   router.push({ name: "Comment", params: { id: newsId } });
 }
 
