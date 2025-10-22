@@ -263,6 +263,8 @@
 <script setup>
 import { ref } from "vue";
 import * as yup from "yup";
+import { useRouter } from "vue-router";
+const router = useRouter();
 
 const isSignUp = ref(false);
 const name = ref("");
@@ -379,7 +381,7 @@ async function handleLogin() {
     });
 
     const text = await response.text();
-    console.log("Raw response:", text);
+    console.log("Raw response (Login):", text);
 
     let result;
     try {
@@ -388,38 +390,32 @@ async function handleLogin() {
       throw new Error("Server response is not JSON");
     }
 
-    if (response.ok) {
-      const email = result.email || loginEmail.value;
-      const isAdmin = email.toLowerCase().endsWith("@fadmin.com");
-
+    if (result.success) {
       const userData = {
+        id: result.id,
         name: result.name,
         surname: result.surname,
         email: result.email,
-        access: result.access,
+        role: result.role,
       };
       localStorage.setItem("user", JSON.stringify(userData));
 
-      if (isAdmin) {
-        alert(` Welcome Admin, ${result.name || "User"}!`);
-        window.location.href = "/admin";
+      if (result.role === "ADMIN") {
+        alert(`🌟Welcome Admin, ${result.name}!`);
+        window.location.href = "/";
       } else {
-        alert(
-          `🌟 Welcome, ${result.name || "User"}! You’ve logged in successfully.`
-        );
+        alert(`🌟Welcome, ${result.name}! You’ve logged in successfully.`);
         window.location.href = "/";
       }
     } else {
-      alert(result.message || " Invalid email or password");
+      alert(result.message || "Invalid email or password");
     }
   } catch (err) {
     if (err.inner) {
       err.inner.forEach((e) => (errors.value[e.path] = e.message));
     } else {
-      console.error(" Unexpected Error:", err);
-      alert(
-        "Unable to log in right now. Please check your connection and try again."
-      );
+      console.error("Unexpected Error:", err);
+      alert("Unable to log in right now. Please check your connection.");
     }
   }
 }
