@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import axios from "axios";
 
 import AuthorIcon from "@/assets/Card/User.png";
 import DateIcon from "@/assets/Card/Date.png";
@@ -14,14 +15,15 @@ import AddNewsModal from "@/components/AddNewsModal.vue";
 interface NewsItem {
   id: number;
   title: string;
-  stats: string;
+  category: string;
   author: string;
   date?: string;
   upVotes?: number;
   downVotes?: number;
-  comments?: number;
+  commentsCount?: number;
   fulldescription?: string;
   contentLines: string[];
+  image?: string;
 }
 
 interface User {
@@ -39,55 +41,63 @@ const isLoading = ref(true);
 const news = ref<NewsItem>({
   id: 0,
   title: "Loading...",
-  stats: "Loading...",
+  category: "Loading...",
   author: "Loading...",
   date: "Loading...",
   upVotes: 0,
   downVotes: 0,
-  comments: 0,
+  commentsCount: 0,
   fulldescription: "Loading content...",
   contentLines: ["Loading content..."],
+  image: "",
 });
 
+// ✅ ดึงข้อมูลจาก Spring Boot API
 onMounted(async () => {
+  isLoading.value = true;
   try {
-    const res = await fetch("http://localhost/checkitoff/api/news.php");
-    if (!res.ok) throw new Error("Failed to fetch news");
+    const res = await axios.get(`http://localhost:8080/api/news/${newsId}`);
 
-    const data = await res.json();
-    const selected = data.news.find((n: any) => Number(n.id) === newsId);
+    if (res.status === 200 && res.data) {
+      const data = res.data;
 
-    if (selected) {
       news.value = {
-        id: selected.id,
-        title: selected.title,
-        stats: selected.stats || "Unverified",
-        author: selected.author || "Unknown",
-        date: selected.date || "Unknown",
-        upVotes: selected.upVotes || 0,
-        downVotes: selected.downVotes || 0,
-        comments: selected.comments || 0,
-        fulldescription: selected.fullDescription || "No content available.",
-        contentLines: selected.description
-          ? selected.description.split("\n")
+        id: data.id,
+        title: data.title || "Untitled News",
+        category: data.category || "Unverified",
+        author: data.author || "Unknown",
+        date: data.date || "Unknown",
+        upVotes: data.upVotes || 0,
+        downVotes: data.downVotes || 0,
+        commentsCount: data.commentsCount || 0,
+        fulldescription:
+          data.fullDescription ||
+          data.description ||
+          "No content available.",
+        contentLines: data.description
+          ? data.description.split("\n")
           : ["No content available."],
+        image: data.image || "",
       };
     } else {
       news.value.title = "News not found";
     }
   } catch (err) {
     console.error("❌ Error fetching news:", err);
+    news.value.title = "Error loading news";
   } finally {
     isLoading.value = false;
   }
 });
 
+// ✅ ฟังก์ชันโหลดรูป
 const images = import.meta.glob("@/assets/NewsImages/*.png", { eager: true });
 function getImageById(id: number) {
   const path = `/src/assets/NewsImages/${id}.png`;
   return (images[path] as any)?.default || "";
 }
 
+// ✅ ปุ่มนำทาง
 function goToVote() {
   window.scrollTo({ top: 0, behavior: "smooth" });
   router.push({ name: "Vote", params: { id: newsId } });
@@ -97,12 +107,14 @@ function goToComment() {
   router.push({ name: "Comment", params: { id: newsId } });
 }
 
+// ✅ จัดการผู้ใช้
 const user = ref<User | null>(null);
 onMounted(() => {
   const savedUser = localStorage.getItem("user");
   if (savedUser) user.value = JSON.parse(savedUser);
 });
 
+// ✅ Modal สำหรับเพิ่มข่าว
 const showAddNewsModal = ref(false);
 function openAddNewsModal() {
   showAddNewsModal.value = true;
@@ -110,22 +122,21 @@ function openAddNewsModal() {
 function closeAddNewsModal() {
   showAddNewsModal.value = false;
 }
-
 function handleSaveNews(newItem: NewsItem) {
-  console.log(" New News Added from NewsDetail:", newItem);
-  alert(" News added successfully!");
+  console.log("📰 New News Added from NewsDetail:", newItem);
+  alert("News added successfully!");
   closeAddNewsModal();
 }
 </script>
 
 <template>
   <div class="flex min-h-screen font-[Outfit] bg-white">
-    <!--  Sidebar -->
+    <!-- Sidebar -->
     <AsideMenu :user="user" @openAddNews="openAddNewsModal" />
 
-    <!--  Main Content -->
+    <!-- Main Content -->
     <div class="flex-1 ml-[80px] px-8 py-6">
-      <!--  Loading Spinner -->
+      <!-- Loading Spinner -->
       <div
         v-if="isLoading"
         class="fixed inset-0 bg-white/95 flex flex-col items-center justify-center z-[9999] text-center text-[18px] text-[#333]"
@@ -136,7 +147,7 @@ function handleSaveNews(newItem: NewsItem) {
         <p>Loading news...</p>
       </div>
 
-      <!--  Main Content -->
+      <!-- News Detail -->
       <div v-else>
         <!-- Back Button -->
         <router-link
@@ -151,7 +162,7 @@ function handleSaveNews(newItem: NewsItem) {
           Back to News List
         </router-link>
 
-        <!-- News Detail Card -->
+        <!-- News Card -->
         <div
           class="text-black mt-[10px] bg-white border border-gray-300 rounded-[8px] shadow-[0_4px_10px_rgba(0,0,0,0.15)] min-h-[650px] text-left p-[20px]"
         >
@@ -162,13 +173,14 @@ function handleSaveNews(newItem: NewsItem) {
             <span
               class="inline-flex items-center justify-center text-[17px] px-2 py-1 rounded-[6px] font-medium"
               :class="{
-                'bg-green-100 text-green-700': news.stats === 'Verified',
-                'bg-red-100 text-red-700': news.stats === 'Fake News',
+                'bg-green-100 text-green-700': news.category === 'Verified',
+                'bg-red-100 text-red-700': news.category === 'Fake News',
                 'bg-yellow-100 text-yellow-700':
-                  news.stats === 'Under Review' || news.stats === 'Unverified',
+                  news.category === 'Under Review' ||
+                  news.category === 'Unverified',
               }"
             >
-              {{ news.stats }}
+              {{ news.category }}
             </span>
 
             <span class="inline-flex items-center text-gray-600">
@@ -184,28 +196,19 @@ function handleSaveNews(newItem: NewsItem) {
 
           <!-- Votes -->
           <div class="flex gap-[12px] mt-[15px] ml-[20px]">
-            <span
-              class="inline-flex items-center gap-[6px] font-medium bg-green-50 rounded-[6px] px-3 py-1"
-            >
+            <span class="inline-flex items-center gap-[6px] font-medium bg-green-50 rounded-[6px] px-3 py-1">
               <img :src="LikeIcon" class="w-5 h-5" /> {{ news.upVotes }}
             </span>
-            <span
-              class="inline-flex items-center gap-[6px] font-medium bg-red-50 rounded-[6px] px-3 py-1"
-            >
+            <span class="inline-flex items-center gap-[6px] font-medium bg-red-50 rounded-[6px] px-3 py-1">
               <img :src="DisLikeIcon" class="w-5 h-5" /> {{ news.downVotes }}
             </span>
-            <span
-              class="inline-flex items-center gap-[6px] font-medium bg-gray-100 rounded-[6px] px-3 py-1"
-            >
-              <img :src="CommentIcon" class="w-5 h-5" /> {{ news.comments }} Comments
+            <span class="inline-flex items-center gap-[6px] font-medium bg-gray-100 rounded-[6px] px-3 py-1">
+              <img :src="CommentIcon" class="w-5 h-5" /> {{ news.commentsCount }} Comments
             </span>
           </div>
 
           <!-- Image -->
-          <div
-            class="w-full flex justify-center my-[15px]"
-            v-if="getImageById(news.id)"
-          >
+          <div class="w-full flex justify-center my-[15px]" v-if="getImageById(news.id)">
             <img
               :src="getImageById(news.id)"
               alt="News Image"
@@ -232,14 +235,14 @@ function handleSaveNews(newItem: NewsItem) {
               @click="goToComment"
               class="flex-1 px-4 py-2 rounded-[6px] text-[16px] bg-gray-200 text-gray-900 hover:bg-gray-300"
             >
-              View More Comment
+              View More Comments
             </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!--  Add News Modal -->
+    <!-- Add News Modal -->
     <AddNewsModal
       :show="showAddNewsModal"
       :user="user"
