@@ -265,6 +265,11 @@ function prevPage() {
             </button>
           </div>
         </div>
+        <div
+          v-for="n in props.itemsPerPage - paginatedNews.length"
+          :key="'placeholder-' + n"
+          class="h-[300px] bg-transparent border border-transparent rounded-xl p-4"
+        ></div>
       </div>
     </Transition>
 

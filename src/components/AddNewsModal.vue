@@ -31,6 +31,12 @@ watch(
   (newVal) => {
     if (newVal && props.user) {
       newNews.author = `${props.user.name} ${props.user.surname || ""}`.trim();
+
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, "0");
+      const dd = String(today.getDate()).padStart(2, "0");
+      newNews.date = `${yyyy}-${mm}-${dd}`;
     }
   }
 );
@@ -47,14 +53,41 @@ function closeModal() {
   });
 }
 
+const errors = reactive({
+  title: "",
+  image: "",
+  description: "",
+  fullDescription: "",
+});
+
 async function saveNews() {
-  if (!newNews.title || !newNews.author || !newNews.date) {
-    alert("Please fill in Title, Author, and Date.");
-    return;
+  errors.title = "";
+  errors.image = "";
+  errors.description = "";
+  errors.fullDescription = "";
+
+  let hasError = false;
+  if (!newNews.title) {
+    errors.title = "Please enter the news title.";
+    hasError = true;
+  }
+  if (!newNews.image) {
+    errors.image = "Please provide an image URL.";
+    hasError = true;
+  }
+  if (!newNews.description) {
+    errors.description = "Short description is required.";
+    hasError = true;
+  }
+  if (!newNews.fullDescription) {
+    errors.fullDescription = "Full description cannot be empty.";
+    hasError = true;
   }
 
+  if (hasError) return;
+
   try {
-    const res = await fetch("http://localhost:5175/api/news", {
+    const res = await fetch("http://localhost:8080/api/news", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -62,23 +95,22 @@ async function saveNews() {
         author: newNews.author,
         date: newNews.date,
         image: newNews.image,
-        description: newNews.description, // ข่าวสั้น
-        fullDescription: newNews.fullDescription, // ข่าวเต็ม
+        description: newNews.description,
+        fullDescription: newNews.fullDescription,
+        category: "Unverified",
         upVotes: 0,
         downVotes: 0,
-        comments: 0,
-        mockUpvote: 0,
-        mockDownvote: 0,
+        commentsCount: 0,
       }),
     });
 
     if (!res.ok) throw new Error("Failed to add news");
 
-    alert("✅ News added successfully!");
+    alert("News added successfully!");
     emit("save", { ...newNews });
     closeModal();
   } catch (error) {
-    console.error("❌ Error:", error);
+    console.error("Error:", error);
     alert("Failed to add news.");
   }
 }
@@ -86,7 +118,6 @@ async function saveNews() {
 function clearForm() {
   Object.assign(newNews, {
     title: "",
-    date: "",
     image: "",
     description: "",
     fullDescription: "",
@@ -113,10 +144,14 @@ function clearForm() {
           <label class="block text-xl text-gray-700 font-semibold">Title</label>
           <input
             v-model="newNews.title"
+            @input="errors.title = ''"
             type="text"
             class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
             placeholder="Enter news title"
           />
+          <p v-if="errors.title" class="text-red-600 text-sm mt-1">
+            {{ errors.title }}
+          </p>
         </div>
 
         <!-- Author -->
@@ -141,8 +176,9 @@ function clearForm() {
           <input
             v-model="newNews.date"
             type="date"
-            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-center"
-          /> 
+            readonly
+            class="w-full border border-gray-200 bg-gray-100 text-gray-600 rounded-md px-3 py-2 cursor-not-allowed text-center select-none"
+          />
         </div>
 
         <!-- Image -->
@@ -152,10 +188,14 @@ function clearForm() {
           >
           <input
             v-model="newNews.image"
+            @input="errors.image = ''"
             type="text"
             class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
             placeholder="Paste image link"
           />
+          <p v-if="errors.image" class="text-red-600 text-sm mt-1">
+            {{ errors.image }}
+          </p>
         </div>
 
         <!-- Short Description -->
@@ -165,10 +205,14 @@ function clearForm() {
           >
           <textarea
             v-model="newNews.description"
+            @input="errors.description = ''"
             rows="2"
             class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
-            placeholder="Enter short summary (1–3 sentences)..."
+            placeholder="Enter short summary..."
           ></textarea>
+          <p v-if="errors.description" class="text-red-600 text-sm mt-1">
+            {{ errors.description }}
+          </p>
         </div>
 
         <!-- Full Description -->
@@ -178,10 +222,14 @@ function clearForm() {
           >
           <textarea
             v-model="newNews.fullDescription"
+            @input="errors.fullDescription = ''"
             rows="7"
             class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
             placeholder="Enter detailed description..."
           ></textarea>
+          <p v-if="errors.fullDescription" class="text-red-600 text-sm mt-1">
+            {{ errors.fullDescription }}
+          </p>
         </div>
       </div>
 
