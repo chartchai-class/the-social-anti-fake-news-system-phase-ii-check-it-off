@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import axios from "axios";
+
 import LikeIcon from "@/assets/Card/Like.png";
 import DislikeIcon from "@/assets/Card/Dislike.png";
-
 import AsideMenu from "@/components/AsideMenu.vue";
 import AddNewsModal from "@/components/AddNewsModal.vue";
 
 interface User {
+  id: number;
   name: string;
   email: string;
   surname?: string;
@@ -17,18 +19,21 @@ interface User {
 interface NewsItem {
   id: number;
   title: string;
+  category?: string;
   author?: string;
   date?: string;
   image?: string;
   description?: string;
+  upVotes?: number;
+  downVotes?: number;
 }
 
 const route = useRoute();
 const id = Number(route.params.id);
 
 const isLoading = ref(true);
-const news = ref<any | null>(null);
 const isSubmitting = ref(false);
+const news = ref<NewsItem | null>(null);
 
 const user = ref<User | null>(null);
 const showAddNewsModal = ref(false);
@@ -41,14 +46,23 @@ const form = ref({
 
 async function fetchNewsById() {
   try {
-    const res = await fetch("http://localhost:5175/api/news");
-    if (!res.ok) throw new Error("Failed to fetch news");
+    const res = await axios.get(`http://localhost:8080/api/news/${id}`);
+    if (res.status !== 200) throw new Error("Failed to fetch news");
 
-    const data = await res.json();
-    const selected = data.news.find((n: any) => Number(n.id) === id);
-    news.value = selected || null;
+    const data = res.data;
+    news.value = {
+      id: data.id,
+      title: data.title,
+      category: data.category,
+      author: data.author,
+      date: data.date,
+      image: data.image,
+      description: data.description,
+      upVotes: data.upVotes || 0,
+      downVotes: data.downVotes || 0,
+    };
   } catch (err) {
-    console.error("Error fetching news:", err);
+    console.error("❌ Error fetching news:", err);
     news.value = null;
   } finally {
     isLoading.value = false;
@@ -59,7 +73,7 @@ onMounted(fetchNewsById);
 
 async function submitVote() {
   if (!form.value.comment || !form.value.vote) {
-    alert("⚠️ Please select your vote and add a comment!");
+    alert("Please select your vote and add a comment!");
     return;
   }
 
@@ -67,32 +81,35 @@ async function submitVote() {
   isSubmitting.value = true;
 
   try {
-    const res = await fetch("http://localhost:5175/api/vote", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id,
-        name: user.value
-          ? `${user.value.name} ${user.value.surname || ""}`
-          : "Unknown User",
-        status: form.value.vote,
-        comment: form.value.comment,
-        imageUrl: form.value.imageUrl || "",
-      }),
-    });
+    const votePayload = {
+      news_id: id,
+      user_id: user.value ? (user.value as any).id || 0 : 0,
+      name: user.value
+        ? `${user.value.name} ${user.value.surname || ""}`
+        : "Unknown User",
+      vote: form.value.vote === "up" ? "upvote" : "downvote",
+      comment: form.value.comment,
+      image_url: form.value.imageUrl || null,
+    };
 
-    const data = await res.json();
+    const res = await axios.post(
+      "http://localhost:8080/api/votes",
+      votePayload
+    );
 
-    if (res.ok) {
-      alert(" Thank you for your vote! Your feedback has been recorded.");
-      form.value = { vote: "", comment: "", imageUrl: "" };
+    if (res.status === 200 || res.status === 201) {
+      alert("✅ Thank you! Your vote has been recorded.");
+
+      await axios.put(`http://localhost:8080/api/news/${id}/update-all-counts`);
       await fetchNewsById();
+
+      form.value = { vote: "", comment: "", imageUrl: "" };
     } else {
-      alert(" Failed to save your vote: " + data.message);
+      alert("❌ Failed to save your vote.");
     }
   } catch (err) {
     console.error("Error submitting vote:", err);
-    alert("An error occurred while connecting to the server.");
+    alert("An error occurred while submitting your vote.");
   } finally {
     isSubmitting.value = false;
   }
@@ -100,9 +117,7 @@ async function submitVote() {
 
 onMounted(() => {
   const savedUser = localStorage.getItem("user");
-  if (savedUser) {
-    user.value = JSON.parse(savedUser);
-  }
+  if (savedUser) user.value = JSON.parse(savedUser);
 });
 
 function openAddNewsModal() {
@@ -120,10 +135,10 @@ function handleSaveNews(newItem: NewsItem) {
 
 <template>
   <div class="flex min-h-screen font-[Outfit] bg-white">
-    <!--  Sidebar -->
+    <!-- Sidebar -->
     <AsideMenu :user="user" @openAddNews="openAddNewsModal" />
 
-    <!--  Main Content -->
+    <!-- Main Content -->
     <div class="flex-1 ml-[80px] px-8 py-6 overflow-y-auto">
       <!-- Loading Spinner -->
       <div
@@ -136,11 +151,11 @@ function handleSaveNews(newItem: NewsItem) {
         <p>Loading news...</p>
       </div>
 
-      <!--  Content -->
+      <!-- Content -->
       <div v-else class="pb-12">
         <!-- Back Button -->
         <router-link
-          to="/"
+          :to="{ name: 'NewsDetail', params: { id } }"
           class="flex items-center gap-[6px] bg-gray-100 text-black text-[16px] rounded-[8px] px-[20px] py-[10px] max-w-fit cursor-pointer transition-colors duration-300 hover:bg-gray-300"
         >
           <img
@@ -148,10 +163,10 @@ function handleSaveNews(newItem: NewsItem) {
             alt="Back Icon"
             class="w-[20px] h-[20px] mr-[5px]"
           />
-          Back to News List
+          Back to News Detail
         </router-link>
 
-        <!--  Layout -->
+        <!-- Layout -->
         <div
           class="flex flex-col lg:flex-row justify-center gap-6 mt-6 w-full max-w-[800px] mx-auto text-left"
         >
@@ -164,13 +179,15 @@ function handleSaveNews(newItem: NewsItem) {
             <span
               class="block mx-auto mt-[10px] px-[12px] py-[6px] rounded-[6px] text-[1rem] font-medium w-fit"
               :class="{
-                'bg-emerald-100 text-emerald-700': news?.stats === 'Verified',
-                'bg-red-100 text-red-700': news?.stats === 'Fake News',
+                'bg-emerald-100 text-emerald-700':
+                  news?.category === 'Verified',
+                'bg-red-100 text-red-700': news?.category === 'Fake News',
                 'bg-yellow-100 text-yellow-600':
-                  news?.stats === 'Under Review' || news?.stats === 'Unverified',
+                  news?.category === 'Under Review' ||
+                  news?.category === 'Unverified',
               }"
             >
-              {{ news?.stats }}
+              {{ news?.category }}
             </span>
 
             <p class="text-[#444] leading-[1.6] mt-4">
@@ -211,18 +228,22 @@ function handleSaveNews(newItem: NewsItem) {
             <label class="block font-medium mb-[0.3rem] mt-4">Your Vote</label>
             <div class="flex gap-3 mt-[-5px]">
               <button
-                :class="[form.vote === 'up'
-                  ? 'flex-1 rounded-[6px] py-[10px] font-medium bg-green-600 text-white hover:bg-green-700 transition'
-                  : 'flex-1 rounded-[6px] py-[10px] font-medium bg-gray-200 text-black hover:bg-green-600 hover:text-white transition']"
+                :class="[
+                  form.vote === 'up'
+                    ? 'flex-1 rounded-[6px] py-[10px] font-medium bg-green-600 text-white hover:bg-green-700 transition'
+                    : 'flex-1 rounded-[6px] py-[10px] font-medium bg-gray-200 text-black hover:bg-green-600 hover:text-white transition',
+                ]"
                 @click="form.vote = 'up'"
               >
                 This is Real
               </button>
 
               <button
-                :class="[form.vote === 'down'
-                  ? 'flex-1 rounded-[6px] py-[10px] font-medium bg-red-600 text-white hover:bg-red-700 transition'
-                  : 'flex-1 rounded-[6px] py-[10px] font-medium bg-gray-200 text-black hover:bg-red-600 hover:text-white transition']"
+                :class="[
+                  form.vote === 'down'
+                    ? 'flex-1 rounded-[6px] py-[10px] font-medium bg-red-600 text-white hover:bg-red-700 transition'
+                    : 'flex-1 rounded-[6px] py-[10px] font-medium bg-gray-200 text-black hover:bg-red-600 hover:text-white transition',
+                ]"
                 @click="form.vote = 'down'"
               >
                 This is Fake
@@ -230,7 +251,9 @@ function handleSaveNews(newItem: NewsItem) {
             </div>
 
             <!-- Comment -->
-            <label class="block font-medium mb-[0.3rem] mt-4">Your Comment</label>
+            <label class="block font-medium mb-[0.3rem] mt-4"
+              >Your Comment</label
+            >
             <textarea
               v-model="form.comment"
               placeholder="Explain why you think this news is real or fake..."
@@ -260,7 +283,7 @@ function handleSaveNews(newItem: NewsItem) {
       </div>
     </div>
 
-    <!--  Add News Modal -->
+    <!-- Add News Modal -->
     <AddNewsModal
       :show="showAddNewsModal"
       :user="user"

@@ -2,6 +2,8 @@
 import { ref, onMounted, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 
+import axios from "axios";
+
 import LikeIcon from "@/assets/Card/Like.png";
 import DislikeIcon from "@/assets/Card/Dislike.png";
 import CommentIcon from "@/assets/Card/Comment.png";
@@ -11,6 +13,7 @@ const emit = defineEmits(["loaded"]);
 const router = useRouter();
 
 function goToDetail(id: number) {
+  window.scrollTo({ top: 0, behavior: "smooth" });
   router.push({ name: "NewsDetail", params: { id } });
 }
 
@@ -53,24 +56,28 @@ const error = ref<string | null>(null);
 const visibleItems = ref(props.itemsPerPage);
 
 onMounted(async () => {
-  try {
-    const res = await fetch("http://localhost/checkitoff/api/news.php");
-    if (!res.ok) throw new Error("Failed to fetch data");
+  loading.value = true;
 
-    const data = await res.json();
-    if (data.news && Array.isArray(data.news)) {
-      newsList.value = data.news
+  try {
+    //Call Spring Boot API
+    const res = await axios.get("http://localhost:8080/api/news");
+
+    if (res.status !== 200) throw new Error("Failed to fetch data");
+    const data = res.data;
+
+    if (Array.isArray(data)) {
+      newsList.value = data
         .filter((n: any) => n.date)
         .sort(
           (a: any, b: any) =>
             new Date(b.date).getTime() - new Date(a.date).getTime()
         );
     } else {
-      error.value = "No news data found from Google Sheet";
+      error.value = "No news data found from backend";
     }
   } catch (err: any) {
-    console.error(err);
-    error.value = "Failed to load data: " + err.message;
+    console.error("Error fetching news:", err);
+    error.value = "Failed to load data: " + (err.message || "Unknown error");
   } finally {
     loading.value = false;
     emit("loaded");
@@ -224,8 +231,10 @@ function prevPage() {
           <p
             class="mt-3 text-gray-700 text-base text-left line-clamp-3 h-[72px]"
           >
+            <span class="font-bold text-[#003791]">#{{ item.id }}</span> •
             {{ item.description }}
           </p>
+
           <p class="mt-4 mb-[0.1rem] text-gray-500 text-sm text-left news-meta">
             By {{ item.author }} • {{ item.date }}
           </p>
@@ -259,34 +268,38 @@ function prevPage() {
       </div>
     </Transition>
 
+    <!-- Pagination -->
     <div
       v-if="totalPages > 1"
-      class="flex justify-center items-center gap-2 mt-8 select-none"
+      class="flex justify-center items-center mt-10 space-x-2 select-none font-[Outfit]"
     >
+      <!-- Prev -->
       <button
-        class="px-3 py-1 rounded-lg border text-sm transition disabled:opacity-50 hover:bg-gray-100"
+        class="flex items-center justify-center px-4 py-2 rounded-xl border border-gray-200 bg-white shadow-sm text-sm text-gray-700 font-medium transition-all duration-300 ease-in-out hover:bg-gray-100 hover:-translate-y-[1px] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
         :disabled="currentPage === 1"
         @click="prevPage"
       >
         ← Prev
       </button>
 
+      <!-- Page Numbers -->
       <button
         v-for="page in totalPages"
         :key="page"
-        class="px-3 py-1 rounded-lg text-sm font-medium transition"
-        :class="
-          page === currentPage
-            ? 'bg-blue-600 text-white'
-            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-        "
         @click="goToPage(page)"
+        class="w-9 h-9 rounded-lg font-semibold text-sm transition-all duration-300 ease-in-out flex items-center justify-center border border-gray-200"
+        :class="[
+          page === currentPage
+            ? 'bg-[#003791] text-white shadow-md scale-110'
+            : 'bg-gray-100 text-gray-700 hover:bg-[#E5E8F0] hover:scale-105',
+        ]"
       >
         {{ page }}
       </button>
 
+      <!-- Next -->
       <button
-        class="px-3 py-1 rounded-lg border text-sm transition disabled:opacity-50 hover:bg-gray-100"
+        class="flex items-center justify-center px-4 py-2 rounded-xl border border-gray-200 bg-white shadow-sm text-sm text-gray-700 font-medium transition-all duration-300 ease-in-out hover:bg-gray-100 hover:-translate-y-[1px] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
         :disabled="currentPage === totalPages"
         @click="nextPage"
       >
