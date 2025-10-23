@@ -1,25 +1,31 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import axios from "axios";
+
 import LikeIcon from "@/assets/Card/Like.png";
 import DislikeIcon from "@/assets/Card/Dislike.png";
 import CommentIcon from "@/assets/Card/Comment.png";
+
 import AsideMenu from "@/components/AsideMenu.vue";
 import AddNewsModal from "@/components/AddNewsModal.vue";
 
 interface NewsItem {
   id: number;
+  title: string;
   upVotes: number;
   downVotes: number;
-  comments: number;
+  commentsCount: number;
 }
+
 interface CommentItem {
-  id: string;
+  id: number;
   name: string;
-  status: string;
+  vote: string;
   comment: string;
   imageUrl?: string;
 }
+
 interface User {
   name: string;
   email: string;
@@ -32,38 +38,61 @@ const id = Number(route.params.id);
 
 const isLoading = ref(true);
 const isLoadingComments = ref(true);
-const news = ref<NewsItem>({ id, upVotes: 0, downVotes: 0, comments: 0 });
-const comments = ref<CommentItem[]>([]);
 
+const news = ref<NewsItem>({
+  id,
+  title: "Loading...",
+  upVotes: 0,
+  downVotes: 0,
+  commentsCount: 0,
+});
+
+const comments = ref<CommentItem[]>([]);
 const user = ref<User | null>(null);
 
-onMounted(async () => {
+async function fetchNews() {
   try {
-    const res = await fetch(
-      `http://localhost/checkitoff/api/news.php?id=${id}`
-    );
-    const data = await res.json();
-
-    if (data.news) {
+    const res = await axios.get(`http://localhost:8080/api/news/${id}`);
+    if (res.status === 200 && res.data) {
+      const data = res.data;
       news.value = {
-        id: data.news.id,
-        upVotes: data.news.upVotes || 0,
-        downVotes: data.news.downVotes || 0,
-        comments: data.news.commentsCount || 0,
+        id: data.id,
+        title: data.title,
+        upVotes: data.upVotes || 0,
+        downVotes: data.downVotes || 0,
+        commentsCount: data.commentsCount || 0,
       };
     }
-
-    const res2 = await fetch(
-      `http://localhost/checkitoff/api/comments.php?news_id=${id}`
-    );
-    const data2 = await res2.json();
-    comments.value = data2.comments;
   } catch (err) {
-    console.error(" Error fetching data:", err);
+    console.error("Error fetching news:", err);
   } finally {
     isLoading.value = false;
+  }
+}
+
+async function fetchComments() {
+  try {
+    const res = await axios.get(
+      `http://localhost:8080/api/votes/news/${id}`
+    );
+    if (res.status === 200 && Array.isArray(res.data)) {
+      comments.value = res.data.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        vote: c.vote,
+        comment: c.comment,
+        imageUrl: c.imageUrl || null,
+      }));
+    }
+  } catch (err) {
+    console.error("Error fetching comments:", err);
+  } finally {
     isLoadingComments.value = false;
   }
+}
+
+onMounted(async () => {
+  await Promise.all([fetchNews(), fetchComments()]);
 });
 
 onMounted(() => {
@@ -84,7 +113,7 @@ function closeAddNewsModal() {
 }
 
 function handleSaveNews(newItem: any) {
-  console.log(" New News Added (from Comment Page):", newItem);
+  console.log("New News Added (from Comment Page):", newItem);
   alert(" News added successfully!");
   closeAddNewsModal();
 }
@@ -92,10 +121,10 @@ function handleSaveNews(newItem: any) {
 
 <template>
   <div class="flex min-h-screen font-[Outfit] bg-white">
-    <!--  ASIDE MENU -->
+    <!-- ASIDE MENU -->
     <AsideMenu :user="user" @openAddNews="openAddNewsModal" />
 
-    <!--  MAIN CONTENT -->
+    <!-- MAIN CONTENT -->
     <div class="flex-1 ml-[80px] px-8 py-6">
       <!-- Back -->
       <router-link
@@ -116,7 +145,7 @@ function handleSaveNews(newItem: any) {
       >
         <div class="flex flex-col gap-2">
           <h2 class="font-bold text-[24px] text-[#111827]">
-            Government Launches New Education Reform Policy
+            {{ news.title }}
           </h2>
           <div class="flex gap-6 text-[18px]">
             <div class="flex items-center gap-2">
@@ -129,7 +158,7 @@ function handleSaveNews(newItem: any) {
             </div>
             <div class="flex items-center gap-2">
               <img :src="CommentIcon" alt="Comment" class="w-7 h-7" />
-              <span>{{ news.comments }} Total Comments</span>
+              <span>{{ news.commentsCount }} Total Comments</span>
             </div>
           </div>
         </div>
@@ -150,6 +179,7 @@ function handleSaveNews(newItem: any) {
         <div v-if="isLoadingComments" class="text-gray-500">
           Loading comments...
         </div>
+
         <div
           v-else-if="comments.length === 0"
           class="text-center text-[#666] italic mt-3"
@@ -160,28 +190,23 @@ function handleSaveNews(newItem: any) {
         <div v-else>
           <div
             v-for="c in comments"
-            :key="c.name"
+            :key="c.id"
             class="flex flex-col text-left gap-3 bg-white rounded-xl py-5 px-5 border-b border-gray-200 -ml-5"
           >
             <div class="flex items-center gap-3">
               <span class="font-semibold text-[18px]">{{ c.name }}</span>
+
               <span
-                v-if="c.status === 'Real'"
+                v-if="c.vote === 'upvote'"
                 class="text-green-600 bg-green-100 px-2 py-[2px] rounded-md text-sm font-medium"
               >
                 Real
               </span>
               <span
-                v-else-if="c.status === 'Fake'"
+                v-else-if="c.vote === 'downvote'"
                 class="text-red-600 bg-red-100 px-2 py-[2px] rounded-md text-sm font-medium"
               >
                 Fake
-              </span>
-              <span
-                v-else
-                class="text-yellow-600 bg-yellow-100 px-2 py-[2px] rounded-md text-sm font-medium"
-              >
-                Review
               </span>
             </div>
 
@@ -200,7 +225,7 @@ function handleSaveNews(newItem: any) {
       </div>
     </div>
 
-    <!--  Add News Modal -->
+    <!-- Add News Modal -->
     <AddNewsModal
       :show="showAddNewsModal"
       :user="user"
