@@ -52,7 +52,6 @@ const news = ref<NewsItem>({
   image: "",
 });
 
-// ✅ ดึงข้อมูลจาก Spring Boot API
 onMounted(async () => {
   isLoading.value = true;
   try {
@@ -71,9 +70,7 @@ onMounted(async () => {
         downVotes: data.downVotes || 0,
         commentsCount: data.commentsCount || 0,
         fulldescription:
-          data.fullDescription ||
-          data.description ||
-          "No content available.",
+          data.fullDescription || data.description || "No content available.",
         contentLines: data.description
           ? data.description.split("\n")
           : ["No content available."],
@@ -90,14 +87,28 @@ onMounted(async () => {
   }
 });
 
-// ✅ ฟังก์ชันโหลดรูป
-const images = import.meta.glob("@/assets/NewsImages/*.png", { eager: true });
-function getImageById(id: number) {
-  const path = `/src/assets/NewsImages/${id}.png`;
-  return (images[path] as any)?.default || "";
+const images = import.meta.glob("@/assets/NewsImages/*.{png,jpg,jpeg}", {
+  eager: true,
+});
+
+function getImageSrc(image?: string, id?: number): string {
+  if (!image)
+    return new URL("@/assets/NewsImages/default.png", import.meta.url).href;
+
+  if (image.startsWith("http")) return image;
+
+  if (id) {
+    const localById = `${id}.png`;
+    for (const path in images) {
+      if (path.endsWith(localById)) {
+        return (images as any)[path].default;
+      }
+    }
+  }
+
+  return new URL("@/assets/NewsImages/default.png", import.meta.url).href;
 }
 
-// ✅ ปุ่มนำทาง
 function goToVote() {
   window.scrollTo({ top: 0, behavior: "smooth" });
   router.push({ name: "Vote", params: { id: newsId } });
@@ -107,14 +118,12 @@ function goToComment() {
   router.push({ name: "Comment", params: { id: newsId } });
 }
 
-// ✅ จัดการผู้ใช้
 const user = ref<User | null>(null);
 onMounted(() => {
   const savedUser = localStorage.getItem("user");
   if (savedUser) user.value = JSON.parse(savedUser);
 });
 
-// ✅ Modal สำหรับเพิ่มข่าว
 const showAddNewsModal = ref(false);
 function openAddNewsModal() {
   showAddNewsModal.value = true;
@@ -166,7 +175,11 @@ function handleSaveNews(newItem: NewsItem) {
         <div
           class="text-black mt-[10px] bg-white border border-gray-300 rounded-[8px] shadow-[0_4px_10px_rgba(0,0,0,0.15)] min-h-[650px] text-left p-[20px]"
         >
-          <h1 class="text-4xl font-bold mb-2 ml-[20px]">{{ news.title }}</h1>
+          <h1
+            class="text-4xl font-bold mb-2 ml-[20px] w-[820px] whitespace-normal break-words"
+          >
+            {{ news.title }}
+          </h1>
 
           <!-- Info -->
           <div class="flex items-center gap-[12px] ml-[20px] mt-5">
@@ -184,7 +197,11 @@ function handleSaveNews(newItem: NewsItem) {
             </span>
 
             <span class="inline-flex items-center text-gray-600">
-              <img :src="AuthorIcon" alt="Author" class="w-[20px] h-[20px] mx-2" />
+              <img
+                :src="AuthorIcon"
+                alt="Author"
+                class="w-[20px] h-[20px] mx-2"
+              />
               By {{ news.author }}
             </span>
 
@@ -196,23 +213,32 @@ function handleSaveNews(newItem: NewsItem) {
 
           <!-- Votes -->
           <div class="flex gap-[12px] mt-[15px] ml-[20px]">
-            <span class="inline-flex items-center gap-[6px] font-medium bg-green-50 rounded-[6px] px-3 py-1">
+            <span
+              class="inline-flex items-center gap-[6px] font-medium bg-green-50 rounded-[6px] px-3 py-1"
+            >
               <img :src="LikeIcon" class="w-5 h-5" /> {{ news.upVotes }}
             </span>
-            <span class="inline-flex items-center gap-[6px] font-medium bg-red-50 rounded-[6px] px-3 py-1">
+            <span
+              class="inline-flex items-center gap-[6px] font-medium bg-red-50 rounded-[6px] px-3 py-1"
+            >
               <img :src="DisLikeIcon" class="w-5 h-5" /> {{ news.downVotes }}
             </span>
-            <span class="inline-flex items-center gap-[6px] font-medium bg-gray-100 rounded-[6px] px-3 py-1">
-              <img :src="CommentIcon" class="w-5 h-5" /> {{ news.commentsCount }} Comments
+            <span
+              class="inline-flex items-center gap-[6px] font-medium bg-gray-100 rounded-[6px] px-3 py-1"
+            >
+              <img :src="CommentIcon" class="w-5 h-5" />
+              {{ news.commentsCount }} Comments
             </span>
           </div>
 
-          <!-- Image -->
-          <div class="w-full flex justify-center my-[15px]" v-if="getImageById(news.id)">
+          <div class="w-full flex justify-left my-[15px] ml-[15px]">
             <img
-              :src="getImageById(news.id)"
+              :src="getImageSrc(news.image, news.id)"
               alt="News Image"
-              class="w-[820px] max-h-[270px] object-cover rounded-[6px] shadow"
+              class="w-[820px] max-h-[270px] object-cover rounded-[6px] shadow opacity-0 transition-opacity duration-700"
+              loading="lazy"
+              @load="(e) => ((e.target as HTMLImageElement).style.opacity = '1')"
+              @error="(e) => ((e.target as HTMLImageElement).src = '/src/assets/NewsImages/default.png')"
             />
           </div>
 
