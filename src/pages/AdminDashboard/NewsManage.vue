@@ -1,17 +1,20 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
+import axios from "axios";
 
 interface NewsItem {
   id: number;
   title: string;
-  author: string;
-  date: string;
-  stats: string;
-  description?: string;
-  fullDescription?: string;
+  category?: string;
+  author?: string;
+  date?: string;
+  image?: string;
   upVotes?: number;
   downVotes?: number;
-  comments?: number;
+  commentsCount?: number;
+  description?: string;
+  fullDescription?: string;
+  visible?: boolean;
 }
 
 const isLoading = ref(true);
@@ -19,55 +22,67 @@ const newsList = ref<NewsItem[]>([]);
 const selectedNews = ref<NewsItem | null>(null);
 const showDetailModal = ref(false);
 
-// state สำหรับเรียง
 const sortOrderDate = ref<"asc" | "desc">("desc");
-const sortOrderStats = ref<"asc" | "desc">("asc");
+const sortOrdercategory = ref<"asc" | "desc">("asc");
+const sortOrderId = ref<"asc" | "desc">("asc");
 
-// toggle เรียงตาม Status
-function sortByStats() {
-  sortOrderStats.value = sortOrderStats.value === "asc" ? "desc" : "asc";
-
+function sortBycategory() {
+  sortOrdercategory.value = sortOrdercategory.value === "asc" ? "desc" : "asc";
   newsList.value.sort((a, b) => {
-    if (a.stats < b.stats) return sortOrderStats.value === "asc" ? -1 : 1;
-    if (a.stats > b.stats) return sortOrderStats.value === "asc" ? 1 : -1;
+    const catA = a.category ?? "";
+    const catB = b.category ?? "";
+    if (catA < catB) return sortOrdercategory.value === "asc" ? -1 : 1;
+    if (catA > catB) return sortOrdercategory.value === "asc" ? 1 : -1;
     return 0;
   });
 }
 
-// toggle เรียงตาม Date
 function sortByDate() {
   sortOrderDate.value = sortOrderDate.value === "asc" ? "desc" : "asc";
-
   newsList.value.sort((a, b) => {
-    const dateA = new Date(a.date).getTime();
-    const dateB = new Date(b.date).getTime();
+    const dateA = new Date(a.date ?? "1970-01-01").getTime();
+    const dateB = new Date(b.date ?? "1970-01-01").getTime();
     return sortOrderDate.value === "asc" ? dateA - dateB : dateB - dateA;
   });
 }
 
-// Reset Sort
+function sortById() {
+  sortOrderId.value = sortOrderId.value === "asc" ? "desc" : "asc";
+  newsList.value.sort((a, b) => {
+    const idA = a.id ?? 0;
+    const idB = b.id ?? 0;
+    return sortOrderId.value === "asc" ? idA - idB : idB - idA;
+  });
+}
+
 function resetSort() {
   newsList.value.sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    (a, b) =>
+      new Date(b.date ?? "1970-01-01").getTime() -
+      new Date(a.date ?? "1970-01-01").getTime()
   );
   sortOrderDate.value = "desc";
-  sortOrderStats.value = "asc";
+  sortOrdercategory.value = "asc";
+  sortOrderId.value = "asc";
 }
 
 async function fetchNews() {
   try {
-    const res = await fetch("http://localhost:5175/api/news");
+    const res = await fetch("http://localhost:8080/api/news");
     if (!res.ok) throw new Error("Failed to fetch news");
 
     const data = await res.json();
-    newsList.value = data.news
-      .filter((n: any) => n.date)
+    newsList.value = data
+      .map((n: any) => ({
+        ...n,
+        visible: n.visible ?? true,
+      }))
       .sort(
         (a: any, b: any) =>
           new Date(b.date).getTime() - new Date(a.date).getTime()
       );
   } catch (err) {
-    console.error(" Error fetching news:", err);
+    console.error("Error fetching news:", err);
   } finally {
     isLoading.value = false;
   }
@@ -77,13 +92,39 @@ function openNewsDetail(news: NewsItem) {
   selectedNews.value = news;
   showDetailModal.value = true;
 }
-
 function closeNewsDetail() {
   showDetailModal.value = false;
   selectedNews.value = null;
 }
 
 onMounted(fetchNews);
+
+const visibleNews = computed(() => newsList.value.filter((n) => n.visible));
+const hiddenNews = computed(() => newsList.value.filter((n) => !n.visible));
+
+async function hideNews(news: NewsItem) {
+  try {
+    const res = await axios.put(
+      `http://localhost:8080/api/news/hide/${news.id}`
+    );
+    alert(res.data.message || " News hidden successfully");
+    await fetchNews();
+  } catch (err) {
+    console.error(err);
+    alert("Failed to hide news");
+  }
+}
+
+async function showAgain(id: number) {
+  try {
+    const res = await axios.put(`http://localhost:8080/api/news/show/${id}`);
+    alert(res.data.message || "🌟 News shown successfully");
+    await fetchNews();
+  } catch (err) {
+    console.error(err);
+    alert("Failed to show news");
+  }
+}
 </script>
 
 <template>
@@ -92,117 +133,46 @@ onMounted(fetchNews);
     <div class="flex-1 ml-[80px] px-10 py-8 w-[1500px]">
       <h1 class="text-3xl font-bold text-[#111827] mb-6">Manage News</h1>
 
-      <!-- ปุ่ม Sorting -->
-      <div class="mb-4 flex items-center gap-3 justify-end">
+      <!-- Sorting Buttons -->
+      <div class="mb-4 flex items-center justify-between gap-3 flex-nowrap">
         <router-link
           to="/"
-          class="flex items-center gap-2 px-4 py-2 bg-gray-100 text-black rounded-md hover:bg-gray-300 transition mr-174"
+          class="inline-flex items-center justify-center gap-2 h-[40px] px-4 bg-gray-100 text-black rounded-md hover:bg-gray-300 transition whitespace-nowrap"
         >
           <img
             src="@/assets/Card/Back.png"
-            alt="Back Icon"
-            class="w-[20px] h-[20px] mr-[5px]"
+            alt="Back"
+            class="w-[20px] h-[20px]"
           />
           Back to News List
         </router-link>
 
-        <!-- Sort by Status -->
-        <button
-          @click="sortByStats"
-          class="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition"
-        >
-          Sort by Status
-          <svg
-            v-if="sortOrderStats === 'asc'"
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="2"
+        <div class="flex items-center gap-3 flex-nowrap">
+          <button
+            @click="sortBycategory"
+            class="h-[40px] px-4 bg-green-500 text-white rounded-md hover:bg-green-600"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M5 15l7-7 7 7"
-            />
-          </svg>
-          <svg
-            v-else
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="2"
+            Sort by Status
+          </button>
+          <button
+            @click="sortById"
+            class="h-[40px] px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
-        </button>
-
-        <!-- Sort by Date -->
-        <button
-          @click="sortByDate"
-          class="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
-        >
-          Sort by Date
-          <svg
-            v-if="sortOrderDate === 'asc'"
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="2"
+            Sort by ID
+          </button>
+          <button
+            @click="sortByDate"
+            class="h-[40px] px-4 bg-yellow-500 text-white rounded-md hover:bg-yellow-600"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M5 15l7-7 7 7"
-            />
-          </svg>
-          <svg
-            v-else
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="2"
+            Sort by Date
+          </button>
+          <button
+            @click="resetSort"
+            class="h-[40px] px-4 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
-        </button>
-
-        <!-- Reset Sort -->
-        <button
-          @click="resetSort"
-          class="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition ml-17"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-4 w-4 text-gray-700"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M4 4v6h6M20 20v-6h-6M4 10a8 8 0 0116 0c0 2.21-.9 4.21-2.35 5.65M20 14a8 8 0 01-16 0"
-            />
-          </svg>
-          Reset Sort
-        </button>
+            Reset Sort
+          </button>
+        </div>
       </div>
 
       <!-- Loading -->
@@ -216,76 +186,140 @@ onMounted(fetchNews);
         No news found.
       </div>
 
-      <!-- News Table -->
-      <div
-        v-else
-        class="overflow-x-auto shadow rounded-lg border border-gray-200"
-      >
-        <table class="min-w-full text-left text-gray-700">
-          <thead class="bg-gray-100 text-[16px] font-semibold">
-            <tr>
-              <th class="px-6 py-3">#</th>
-              <th class="px-6 py-3">Title</th>
-              <th class="px-6 py-3">Author</th>
-              <th class="px-6 py-3">Status</th>
-              <th class="px-6 py-3">Date</th>
-              <th class="px-6 py-3">Action</th>
-            </tr>
-          </thead>
+      <!-- Active News -->
+      <div v-else>
+        <div
+          class="overflow-x-auto shadow rounded-lg border border-gray-200 mb-10"
+        >
+          <h2 class="text-xl font-semibold text-gray-800 px-6 pt-4 pb-2">
+            Active News
+          </h2>
 
-          <tbody>
-            <tr
-              v-for="news in newsList"
-              :key="news.id"
-              class="hover:bg-gray-50 border-b border-gray-100 cursor-pointer transition"
-              @click="openNewsDetail(news)"
-            >
-              <td class="px-6 py-3">{{ news.id }}</td>
-              <td class="px-6 py-3 font-medium text-blue-600">
-                {{ news.title }}
-              </td>
-              <td class="px-6 py-3">{{ news.author }}</td>
+          <table class="min-w-full text-left text-gray-700">
+            <thead class="bg-gray-100 text-[16px] font-semibold">
+              <tr>
+                <th class="px-6 py-3">#</th>
+                <th class="px-6 py-3">Title</th>
+                <th class="px-6 py-3">Author</th>
+                <th class="px-6 py-3">Status</th>
+                <th class="px-6 py-3">Date</th>
+                <th class="px-6 py-3">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="news in visibleNews"
+                :key="news.id"
+                class="hover:bg-gray-50 border-b border-gray-100 cursor-pointer transition"
+                @click="openNewsDetail(news)"
+              >
+                <td class="px-6 py-3">{{ news.id }}</td>
+                <td class="px-6 py-3 font-medium text-blue-600">
+                  {{ news.title }}
+                </td>
+                <td class="px-6 py-3">{{ news.author }}</td>
+                <td class="px-6 py-3">
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="inline-block w-3 h-3 rounded-full"
+                      :class="{
+                        'bg-green-500': news.category === 'Verified',
+                        'bg-red-500': news.category === 'Fake News',
+                        'bg-yellow-400':
+                          news.category === 'Unverified' ||
+                          news.category === 'Under Review',
+                        'bg-gray-400': !news.category,
+                      }"
+                    ></span>
+                    <span
+                      :class="{
+                        'text-green-600 font-semibold':
+                          news.category === 'Verified',
+                        'text-red-600 font-semibold':
+                          news.category === 'Fake News',
+                        'text-yellow-500 font-semibold':
+                          news.category === 'Unverified' ||
+                          news.category === 'Under Review',
+                        'text-gray-500': !news.category,
+                      }"
+                    >
+                      {{ news.category || "Unverified" }}
+                    </span>
+                  </div>
+                </td>
 
-              <!-- Status + จุดสี -->
-              <td class="px-6 py-3">
-                <div class="flex items-center gap-2">
-                  <span
-                    class="inline-block w-3 h-3 rounded-full flex-shrink-0"
-                    :class="{
-                      'bg-green-500': news.stats === 'Verified',
-                      'bg-red-500': news.stats === 'Fake News',
-                      'bg-yellow-400':
-                        news.stats === 'Unverified' ||
-                        news.stats === 'Under Review',
-                    }"
-                  ></span>
-                  <span
-                    class="text-[16px] font-medium leading-none"
-                    :class="{
-                      'text-green-700': news.stats === 'Verified',
-                      'text-red-600': news.stats === 'Fake News',
-                      'text-yellow-600':
-                        news.stats === 'Unverified' ||
-                        news.stats === 'Under Review',
-                    }"
+                <td class="px-6 py-3">{{ news.date }}</td>
+                <td class="px-6 py-3">
+                  <button
+                    @click.stop="hideNews(news)"
+                    class="px-3 py-1 bg-red-700 text-white rounded-md hover:bg-red-800"
                   >
-                    {{ news.stats || "Unverified" }}
-                  </span>
-                </div>
-              </td>
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-              <td class="px-6 py-3">{{ news.date }}</td>
+        <!--  Hidden News -->
+        <div
+          v-if="hiddenNews.length > 0"
+          class="overflow-x-auto shadow rounded-lg border border-gray-200 mt-10"
+        >
+          <h2 class="text-xl font-semibold text-gray-800 px-6 pt-4 pb-2">
+            Hidden News ({{ hiddenNews.length }})
+          </h2>
 
-              <td class="px-6 py-3">
-                <button
-                  class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+          <table class="min-w-full text-left text-gray-700">
+            <thead class="bg-gray-100 text-[16px] font-semibold">
+              <tr>
+                <th class="px-6 py-3">#</th>
+                <th class="px-6 py-3">Title</th>
+                <th class="px-6 py-3">Author</th>
+                <th class="px-6 py-3">Status</th>
+                <th class="px-6 py-3">Date</th>
+                <th class="px-6 py-3">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="news in hiddenNews"
+                :key="news.id"
+                class="hover:bg-gray-50 border-b border-gray-100 transition"
+                @click="openNewsDetail(news)"
+              >
+                <td class="px-6 py-3">{{ news.id }}</td>
+                <td class="px-6 py-3 text-gray-500 italic">{{ news.title }}</td>
+                <td class="px-6 py-3">{{ news.author }}</td>
+                <td class="px-6 py-3">
+                  <div class="flex items-center gap-2" title="Hidden News">
+                    <span
+                      class="inline-block w-3 h-3 rounded-full bg-purple-500"
+                    ></span>
+                    <span class="text-purple-600 font-semibold italic"
+                      >Hidden</span
+                    >
+                  </div>
+                </td>
+
+                <td class="px-6 py-3">{{ news.date }}</td>
+                <td class="px-6 py-3">
+                  <button
+                    @click.stop="showAgain(news.id)"
+                    class="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700"
+                  >
+                    Show Again
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div v-else class="text-gray-500 text-sm italic text-right mt-2">
+          No hidden news.
+        </div>
       </div>
     </div>
 
@@ -296,7 +330,7 @@ onMounted(fetchNews);
       @click.self="closeNewsDetail"
     >
       <div
-        class="bg-white w-[750px] max-h-[90vh] overflow-y-auto scrollbar-hide rounded-2xl shadow-xl p-8 font-[Outfit]"
+        class="bg-white w-[750px] max-h-[90vh] overflow-y-auto rounded-2xl shadow-xl p-8 font-[Outfit]"
       >
         <h2 class="text-2xl font-bold text-gray-800 mb-4">
           {{ selectedNews.title }}
@@ -307,19 +341,52 @@ onMounted(fetchNews);
         <p class="text-gray-600 mb-2">
           <strong>Date:</strong> {{ selectedNews.date }}
         </p>
-        <p class="text-gray-600 mb-2 flex items-center justify-center gap-2">
-          <strong>Status:</strong>
+        <p class="text-gray-600 mb-2">
+          <strong class="mr-2">Category:</strong>
+
           <span
-            class="inline-block w-3 h-3 rounded-full"
+            class="inline-block w-3 h-3 rounded-full mr-2"
             :class="{
-              'bg-green-500': selectedNews.stats === 'Verified',
-              'bg-red-500': selectedNews.stats === 'Fake News',
+              'bg-purple-500': selectedNews.visible === false,
+              'bg-green-500':
+                selectedNews.category === 'Verified' &&
+                selectedNews.visible !== false,
+              'bg-red-500':
+                selectedNews.category === 'Fake News' &&
+                selectedNews.visible !== false,
               'bg-yellow-400':
-                selectedNews.stats === 'Unverified' ||
-                selectedNews.stats === 'Under Review',
+                (selectedNews.category === 'Unverified' ||
+                  selectedNews.category === 'Under Review') &&
+                selectedNews.visible !== false,
+              'bg-gray-400':
+                !selectedNews.category && selectedNews.visible !== false,
             }"
           ></span>
-          <span class="font-medium">{{ selectedNews.stats }}</span>
+
+          <span
+            :class="{
+              'text-purple-600 font-semibold italic':
+                selectedNews.visible === false,
+              'text-green-600 font-semibold':
+                selectedNews.category === 'Verified' &&
+                selectedNews.visible !== false,
+              'text-red-600 font-semibold':
+                selectedNews.category === 'Fake News' &&
+                selectedNews.visible !== false,
+              'text-yellow-500 font-semibold':
+                (selectedNews.category === 'Unverified' ||
+                  selectedNews.category === 'Under Review') &&
+                selectedNews.visible !== false,
+              'text-gray-500':
+                !selectedNews.category && selectedNews.visible !== false,
+            }"
+          >
+            {{
+              selectedNews.visible === false
+                ? "Hidden"
+                : selectedNews.category || "Unverified"
+            }}
+          </span>
         </p>
 
         <div class="mt-4 border-t border-gray-300 pt-3">
@@ -327,17 +394,15 @@ onMounted(fetchNews);
             {{ selectedNews.description }}
           </p>
         </div>
-
         <div class="mt-4 border-t border-gray-300 pt-3">
           <p class="text-gray-600 whitespace-pre-line text-left ml-5">
             {{ selectedNews.fullDescription }}
           </p>
         </div>
-
         <div class="flex justify-end mt-6">
           <button
             @click="closeNewsDetail"
-            class="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md transition"
+            class="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md"
           >
             Close
           </button>

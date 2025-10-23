@@ -48,6 +48,7 @@ interface NewsItem {
   downVotes: number;
   commentsCount: number;
   fullDescription?: string;
+  visible?: boolean;
 }
 
 const newsList = ref<NewsItem[]>([]);
@@ -55,11 +56,22 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 const visibleItems = ref(props.itemsPerPage);
 
+const isLoading = ref(true);
+
+async function fetchNews() {
+  try {
+    const res = await axios.get("http://localhost:8080/api/news");
+    newsList.value = res.data.filter((n: any) => n.visible === true);
+  } catch (err) {
+    console.error("❌ Failed to fetch news:", err);
+  } finally {
+    isLoading.value = false;
+  }
+}
+
 onMounted(async () => {
   loading.value = true;
-
   try {
-    //Call Spring Boot API
     const res = await axios.get("http://localhost:8080/api/news");
 
     if (res.status !== 200) throw new Error("Failed to fetch data");
@@ -67,7 +79,8 @@ onMounted(async () => {
 
     if (Array.isArray(data)) {
       newsList.value = data
-        .filter((n: any) => n.date)
+        // ✅ กรองเฉพาะข่าวที่ visible = true ก่อนจัดเรียง
+        .filter((n: any) => n.visible === true && n.date)
         .sort(
           (a: any, b: any) =>
             new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -83,6 +96,7 @@ onMounted(async () => {
     emit("loaded");
   }
 });
+
 
 const filteredNews = computed(() => {
   if (props.filterIndex === 0 || props.filterIndex === null)
