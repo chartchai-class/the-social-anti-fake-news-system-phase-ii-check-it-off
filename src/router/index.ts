@@ -8,7 +8,8 @@ import NewsManage from "@/pages/AdminDashboard/NewsManage.vue";
 import CommentsManage from "@/pages/AdminDashboard/CommentsManage.vue";
 
 const routes = [
-  { path: "/", name: "Home", component: Home },
+  { path: "/", name: "login", component: Login },
+  { path: "/home", name: "Home", component: Home },
   { path: "/news/:id", name: "NewsDetail", component: NewsDetail },
   { path: "/vote/:id", name: "Vote", component: Vote },
   { path: "/comment/:id", name: "Comment", component: Comment },

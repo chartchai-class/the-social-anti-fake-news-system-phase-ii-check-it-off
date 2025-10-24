@@ -402,10 +402,10 @@ async function handleLogin() {
 
       if (result.role === "ADMIN") {
         alert(`🌟Welcome Admin, ${result.name}!`);
-        window.location.href = "/";
+        window.location.href = "/home";
       } else {
         alert(`🌟Welcome, ${result.name}! You’ve logged in successfully.`);
-        window.location.href = "/";
+        window.location.href = "/home";
       }
     } else {
       alert(result.message || "Invalid email or password");

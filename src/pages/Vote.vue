@@ -100,7 +100,6 @@ async function submitVote() {
     if (res.status === 200 || res.status === 201) {
       alert("✅ Thank you! Your vote has been recorded.");
 
-      await axios.put(`http://localhost:8080/api/news/${id}/update-all-counts`);
       await fetchNewsById();
 
       form.value = { vote: "", comment: "", imageUrl: "" };

@@ -319,7 +319,7 @@ onMounted(() => {
 });
 
 function goBack() {
-  router.push("/");
+  router.push("/home");
 }
 
 function refresh() {
