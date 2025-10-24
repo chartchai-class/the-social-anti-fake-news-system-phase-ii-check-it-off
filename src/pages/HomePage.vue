@@ -4,6 +4,8 @@ import Header from "../components/Header.vue";
 import NewsList from "../components/NewsList.vue";
 import AsideMenu from "../components/AsideMenu.vue";
 import AddNewsModal from "../components/AddNewsModal.vue";
+import { eventBus } from "@/eventBus";
+
 
 interface User {
   name: string;
@@ -85,6 +87,7 @@ function handleSaveNews(newItem: NewsItem) {
 }
 
 onMounted(() => {
+  
   const savedUser = localStorage.getItem("user");
   if (savedUser) {
     user.value = JSON.parse(savedUser);
@@ -94,6 +97,11 @@ onMounted(() => {
   setTimeout(() => {
     isLoading.value = false;
   }, 2000);
+
+  eventBus.on("comments-updated", () => {
+    console.log("🌀 Comments changed — refreshing HomePage");
+    allNews.value = [...allNews.value];
+  });
 });
 </script>
 

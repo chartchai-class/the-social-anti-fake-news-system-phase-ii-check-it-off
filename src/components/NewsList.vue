@@ -56,19 +56,6 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 const visibleItems = ref(props.itemsPerPage);
 
-const isLoading = ref(true);
-
-async function fetchNews() {
-  try {
-    const res = await axios.get("http://localhost:8080/api/news");
-    newsList.value = res.data.filter((n: any) => n.visible === true);
-  } catch (err) {
-    console.error("❌ Failed to fetch news:", err);
-  } finally {
-    isLoading.value = false;
-  }
-}
-
 onMounted(async () => {
   loading.value = true;
   try {

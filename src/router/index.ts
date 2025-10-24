@@ -5,6 +5,7 @@ import Vote from "@/pages/Vote.vue";
 import Comment from "@/pages/Comment.vue";
 import Login from "@/pages/Login.vue";
 import NewsManage from "@/pages/AdminDashboard/NewsManage.vue";
+import CommentsManage from "@/pages/AdminDashboard/CommentsManage.vue";
 
 const routes = [
   { path: "/", name: "Home", component: Home },
@@ -16,6 +17,11 @@ const routes = [
     path: "/admin/manage-news",
     name: "NewsManage",
     component: NewsManage,
+  },
+  {
+    path: "/admin/delete-comment",
+    name: "CommentsManage",
+    component: CommentsManage,
   },
 ];
 
