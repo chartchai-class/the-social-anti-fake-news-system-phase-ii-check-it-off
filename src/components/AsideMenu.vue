@@ -54,33 +54,41 @@ function formatRole(role?: string) {
 
 const adminButtons = [
   {
-    label: "Del News",
+    label: "Delete News",
     title: "Delete existing news",
     icon: new URL("@/assets/Aside/delete-news.png", import.meta.url).href,
-    colorClass: "bg-[#3A75A2] text-[#6B2E2E] hover:scale-110 transition-transform duration-200",
-    action: () => router.push("/admin/delete-news"),
+    colorClass:
+      "bg-[#3A75A2] text-[#6B2E2E] hover:scale-110 transition-transform duration-200 mt-[15px]",
+    action: () => {
+      router.push("/admin/manage-news").then(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    },
   },
   {
-    label: "Del User",
-    title: "Delete a user account",
-    icon: new URL("@/assets/Aside/delete-user.png", import.meta.url).href,
-    colorClass: "bg-[#5EA1C5] text-[#6B2E2E] hover:scale-110 transition-transform duration-200",
-    action: () => router.push("/admin/delete-user"),
-  },
-  {
-    label: "Del Comment",
+    label: "Delete Comment",
     title: "Delete comment",
     icon: new URL("@/assets/Aside/delete-comment.png", import.meta.url).href,
-    colorClass: "bg-[#94CDE6] text-[#6B2E2E] hover:scale-110 transition-transform duration-200",
+    colorClass:
+      "bg-[#94CDE6] text-[#6B2E2E] hover:scale-110 transition-transform duration-200",
     action: () => router.push("/admin/delete-comment"),
   },
   {
     label: "Change Role",
     title: "Change user role",
     icon: new URL("@/assets/Aside/change-user-role.png", import.meta.url).href,
-    colorClass: "bg-[#C6E6F1] text-[#6B2E2E] hover:scale-110 transition-transform duration-200",
+    colorClass:
+      "bg-[#C6E6F1] text-[#6B2E2E] hover:scale-110 transition-transform duration-200",
     action: () => router.push("/admin/change-role"),
   },
+  {
+    label: "Delete User",
+    title: "Delete a user account",
+    icon: new URL("@/assets/Aside/delete-user.png", import.meta.url).href,
+    colorClass:
+      "bg-[#5EA1C5] text-[#6B2E2E] hover:scale-110 transition-transform duration-200",
+    action: () => router.push("/admin/delete-user"),
+  }, 
 ];
 
 const showLogoutModal = ref(false);
@@ -182,7 +190,6 @@ function cancelLogout() {
       <span class="text-[11px] font-semibold">Logout</span>
     </button>
 
-    <!-- Logout Modal -->
     <!-- Logout Modal -->
     <teleport to="body">
       <div

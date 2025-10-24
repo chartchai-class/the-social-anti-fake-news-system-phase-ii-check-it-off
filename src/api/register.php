@@ -33,7 +33,7 @@ if ($check->num_rows > 0) {
   exit;
 }
 
-if (preg_match("/@Admin\.ornor$/i", $email)) {
+if (preg_match("/@admin\.ornor$/i", $email)) {
   $role = "ADMIN&FORNOR";
 } else {
   $role = "READER";

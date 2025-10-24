@@ -131,7 +131,7 @@ async function showAgain(id: number) {
   <div class="flex min-h-screen font-[Outfit] bg-white">
     <!-- Main Content -->
     <div class="flex-1 ml-[80px] px-10 py-8 w-[1500px]">
-      <h1 class="text-3xl font-bold text-[#111827] mb-6">Manage News</h1>
+      <h1 class="text-5xl font-bold text-[#111827] mb-6">Manage News</h1>
 
       <!-- Sorting Buttons -->
       <div class="mb-4 flex items-center justify-between gap-3 flex-nowrap">
@@ -191,7 +191,9 @@ async function showAgain(id: number) {
         <div
           class="overflow-x-auto shadow rounded-lg border border-gray-200 mb-10"
         >
-          <h2 class="text-xl font-semibold text-gray-800 px-6 pt-4 pb-2">
+          <h2
+            class="text-xl font-semibold text-gray-800 pt-4 pb-2 pl-0 text-left ml-[22px] mb-[9px]"
+          >
             Active News
           </h2>
 
@@ -267,7 +269,9 @@ async function showAgain(id: number) {
           v-if="hiddenNews.length > 0"
           class="overflow-x-auto shadow rounded-lg border border-gray-200 mt-10"
         >
-          <h2 class="text-xl font-semibold text-gray-800 px-6 pt-4 pb-2">
+          <h2
+            class="text-xl font-semibold text-gray-800 pt-4 pb-2 pl-0 text-left ml-[22px] mb-[9px]"
+          >
             Hidden News ({{ hiddenNews.length }})
           </h2>
 

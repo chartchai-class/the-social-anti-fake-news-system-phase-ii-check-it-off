@@ -64,21 +64,21 @@ const stats = ref<Stat[]>([
 
 onMounted(async () => {
   try {
-    const res = await fetch("http://localhost:5175/api/news");
+    const res = await fetch("http://localhost:8080/api/news/stats");
     const data = await res.json();
 
     const fetchedStats = data.stats ?? {
       total: 0,
       verified: 0,
       fake: 0,
-      underReview: 0,
+      unverified: 0,
     };
 
     stats.value = [
       { ...stats.value[0], value: Number(fetchedStats.total) } as Stat,
       { ...stats.value[1], value: Number(fetchedStats.verified) } as Stat,
       { ...stats.value[2], value: Number(fetchedStats.fake) } as Stat,
-      { ...stats.value[3], value: Number(fetchedStats.underReview) } as Stat,
+      { ...stats.value[3], value: Number(fetchedStats.unverified) } as Stat,
     ];
   } catch (err) {
     console.error(err);
