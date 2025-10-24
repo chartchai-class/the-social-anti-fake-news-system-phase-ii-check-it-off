@@ -160,7 +160,7 @@ function handleSaveNews(newItem: NewsItem) {
       <div v-else>
         <!-- Back Button -->
         <router-link
-          to="/"
+          to="/home"
           class="flex items-center gap-[6px] bg-gray-100 text-black text-[16px] rounded-[8px] px-[20px] py-[10px] max-w-fit cursor-pointer transition-colors duration-300 hover:bg-gray-300"
         >
           <img

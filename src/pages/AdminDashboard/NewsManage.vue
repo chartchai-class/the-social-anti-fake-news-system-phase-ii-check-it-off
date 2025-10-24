@@ -136,7 +136,7 @@ async function showAgain(id: number) {
       <!-- Sorting Buttons -->
       <div class="mb-4 flex items-center justify-between gap-3 flex-nowrap">
         <router-link
-          to="/"
+          to="/home"
           class="inline-flex items-center justify-center gap-2 h-[40px] px-4 bg-gray-100 text-black rounded-md hover:bg-gray-300 transition whitespace-nowrap"
         >
           <img
