@@ -87,26 +87,31 @@ onMounted(async () => {
   }
 });
 
-const images = import.meta.glob("@/assets/NewsImages/*.{png,jpg,jpeg}", {
-  eager: true,
-});
+const images = import.meta.glob("../assets/NewsImages/*.{png,jpg,jpeg}", { eager: true });
 
-function getImageSrc(image?: string, id?: number): string {
-  if (!image)
-    return new URL("@/assets/NewsImages/default.png", import.meta.url).href;
+function getImageSrc(_image?: string, id?: number): string {
+  if (!id) return getFallbackImage();
 
-  if (image.startsWith("http")) return image;
+  const idFilename = `${id}.png`;
 
-  if (id) {
-    const localById = `${id}.png`;
-    for (const path in images) {
-      if (path.endsWith(localById)) {
-        return (images as any)[path].default;
-      }
+  for (const path in images) {
+    if (path.endsWith("/" + idFilename)) {
+      const img = (images as Record<string, any>)[path];
+      return typeof img === "string" ? img : img.default;
     }
   }
 
-  return new URL("@/assets/NewsImages/default.png", import.meta.url).href;
+  return getFallbackImage();
+}
+
+function getFallbackImage(): string {
+  for (const path in images) {
+    if (path.endsWith("default.png")) {
+      const img = (images as Record<string, any>)[path];
+      return typeof img === "string" ? img : img.default;
+    }
+  }
+  return "";
 }
 
 function goToVote() {
@@ -209,6 +214,9 @@ function handleSaveNews(newItem: NewsItem) {
               <img :src="DateIcon" alt="Date" class="w-[20px] h-[20px] mx-2" />
               {{ news.date }}
             </span>
+            <span class="inline-flex items-center text-gray-600">
+              #{{ news.id }}
+            </span>
           </div>
 
           <!-- Votes -->
@@ -238,7 +246,7 @@ function handleSaveNews(newItem: NewsItem) {
               class="w-[820px] max-h-[270px] object-cover rounded-[6px] shadow opacity-0 transition-opacity duration-700"
               loading="lazy"
               @load="(e) => ((e.target as HTMLImageElement).style.opacity = '1')"
-              @error="(e) => ((e.target as HTMLImageElement).src = '/src/assets/NewsImages/default.png')"
+              @error="(e) => ((e.target as HTMLImageElement).src = getFallbackImage())"
             />
           </div>
 
