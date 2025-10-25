@@ -321,7 +321,7 @@ async function handleCreateAccount() {
       { abortEarly: false }
     );
 
-    const res = await fetch("http://127.0.0.1/checkitoff/api/register.php", {
+    const res = await fetch("http://localhost:8080/api/votes/create-user", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -329,7 +329,8 @@ async function handleCreateAccount() {
         surname: surname.value,
         email: email.value,
         password: password.value,
-        role: role.value,
+        role: "READER",
+        visible: true,
       }),
     });
 
