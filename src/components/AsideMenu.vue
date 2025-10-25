@@ -71,7 +71,11 @@ const adminButtons = [
     icon: new URL("@/assets/Aside/delete-comment.png", import.meta.url).href,
     colorClass:
       "bg-[#94CDE6] text-[#6B2E2E] hover:scale-110 transition-transform duration-200",
-    action: () => router.push("/admin/delete-comment"),
+    action: () => {
+      router.push("/admin/delete-comment").then(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    },
   },
   {
     label: "Change Role",
@@ -79,7 +83,11 @@ const adminButtons = [
     icon: new URL("@/assets/Aside/change-user-role.png", import.meta.url).href,
     colorClass:
       "bg-[#C6E6F1] text-[#6B2E2E] hover:scale-110 transition-transform duration-200",
-    action: () => router.push("/admin/change-role"),
+    action: () => {
+      router.push("/admin/change-role").then(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    },
   },
   {
     label: "Delete User",
@@ -87,7 +95,11 @@ const adminButtons = [
     icon: new URL("@/assets/Aside/delete-user.png", import.meta.url).href,
     colorClass:
       "bg-[#5EA1C5] text-[#6B2E2E] hover:scale-110 transition-transform duration-200",
-    action: () => router.push("/admin/delete-user"),
+    action: () => {
+      router.push("/admin/delete-user").then(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    },
   }, 
 ];
 

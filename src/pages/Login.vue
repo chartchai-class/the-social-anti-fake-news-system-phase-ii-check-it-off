@@ -372,7 +372,7 @@ async function handleLogin() {
       { abortEarly: false }
     );
 
-    const response = await fetch("http://127.0.0.1/checkitoff/api/login.php", {
+    const response = await fetch("http://localhost:8080/api/users/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -392,6 +392,10 @@ async function handleLogin() {
     }
 
     if (result.success) {
+      if (result.visible === false || result.visible === 0) {
+        alert("Your account is currently inactive. You cannot log in.");
+        return;
+      }
       const userData = {
         id: result.id,
         name: result.name,

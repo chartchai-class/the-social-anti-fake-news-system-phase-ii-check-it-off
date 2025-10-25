@@ -32,15 +32,26 @@ if ($result->num_rows === 1) {
   $user = $result->fetch_assoc();
 
   if (password_verify($rawPassword, $user["password"])) {
+    if (!$user["visible"]) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Your account is currently inactive. You cannot log in.",
+            "visible" => false
+        ]);
+        exit;
+    }
+
     echo json_encode([
-      "success" => true,
-      "message" => "Login successful",
-      "id" => $user["id"],
-      "name" => $user["name"],
-      "surname" => $user["surname"],
-      "email" => $user["email"],
-      "role" => $user["role"]
+        "success" => true,
+        "message" => "Login successful",
+        "id" => $user["id"],
+        "name" => $user["name"],
+        "surname" => $user["surname"],
+        "email" => $user["email"],
+        "role" => $user["role"],
+        "visible" => (bool)$user["visible"]
     ]);
+
   } else {
     echo json_encode(["success" => false, "message" => "Incorrect password."]);
   }
