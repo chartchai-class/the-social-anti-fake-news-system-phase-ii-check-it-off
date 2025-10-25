@@ -7,6 +7,7 @@ import Login from "@/pages/Login.vue";
 import NewsManage from "@/pages/AdminDashboard/NewsManage.vue";
 import CommentsManage from "@/pages/AdminDashboard/CommentsManage.vue";
 import RoleManage from "@/pages/AdminDashboard/RoleManage.vue";
+import UserManage from "@/pages/AdminDashboard/UserManage.vue";
 
 const routes = [
   { path: "/", name: "login", component: Login },
@@ -29,6 +30,11 @@ const routes = [
     path: "/admin/change-role",
     name: "RoleManage",
     component: RoleManage,
+  },
+  {
+    path: "/admin/delete-user",
+    name: "UserManage",
+    component: UserManage,
   },
 ];
 

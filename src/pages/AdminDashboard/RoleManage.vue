@@ -118,7 +118,7 @@ const readerUsers = computed(() =>
 <template>
   <div class="flex min-h-screen font-[Outfit] bg-white">
     <div class="flex-1  px-10 py-8 w-[1500px]">
-      <h1 class="text-5xl font-bold text-[#111827] mb-6">Manage Users</h1>
+      <h1 class="text-5xl font-bold text-[#111827] mb-6">Manage Role of Users</h1>
 
       <!-- Sorting Buttons -->
       <div class="mb-4 flex items-center justify-between gap-3 flex-nowrap">
@@ -131,6 +131,12 @@ const readerUsers = computed(() =>
         </router-link>
 
         <div class="flex items-center gap-3 flex-nowrap">
+           <router-link
+            to="/admin/delete-user"
+            class="inline-flex items-center justify-center gap-2 h-[40px] px-4 text-white bg-red-600 text-black rounded-md hover:bg-red-700 transition whitespace-nowrap"
+          >
+            Open User Management Page
+          </router-link>
           <button
             @click="sortByRole"
             class="h-[40px] px-4 bg-green-500 text-white rounded-md hover:bg-green-600"
