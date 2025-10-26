@@ -365,13 +365,16 @@ async function handleCreateAccount() {
 
 async function handleLogin() {
   try {
+    // ล้าง error ก่อน
     errors.value = {};
 
+    // ตรวจสอบ validation ด้วย yup
     await loginSchema.validate(
       { loginEmail: loginEmail.value, loginPassword: loginPassword.value },
       { abortEarly: false }
     );
 
+    // เรียก API login
     const response = await fetch("http://localhost:8080/api/users/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -394,8 +397,11 @@ async function handleLogin() {
     if (result.success) {
       if (result.visible === false || result.visible === 0) {
         alert("Your account is currently inactive. You cannot log in.");
+        loginEmail.value = "";
+        loginPassword.value = "";
         return;
       }
+
       const userData = {
         id: result.id,
         name: result.name,
@@ -407,23 +413,29 @@ async function handleLogin() {
 
       if (result.role === "ADMIN") {
         alert(`🌟Welcome Admin, ${result.name}!`);
-        window.location.href = "/home";
       } else {
         alert(`🌟Welcome, ${result.name}! You’ve logged in successfully.`);
-        window.location.href = "/home";
       }
+      window.location.href = "/home";
     } else {
       alert(result.message || "Invalid email or password");
+      loginEmail.value = "";
+      loginPassword.value = "";
     }
   } catch (err) {
     if (err.inner) {
       err.inner.forEach((e) => (errors.value[e.path] = e.message));
+      loginEmail.value = "";
+      loginPassword.value = "";
     } else {
       console.error("Unexpected Error:", err);
       alert("Unable to log in right now. Please check your connection.");
+      loginEmail.value = "";
+      loginPassword.value = "";
     }
   }
 }
+
 </script>
 
 <style>

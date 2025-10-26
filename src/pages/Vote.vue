@@ -98,7 +98,7 @@ async function submitVote() {
     );
 
     if (res.status === 200 || res.status === 201) {
-      alert("✅ Thank you! Your vote has been recorded.");
+      alert("🌟 Thank you! Your vote has been recorded.");
 
       await fetchNewsById();
 

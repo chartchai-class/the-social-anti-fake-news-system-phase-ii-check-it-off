@@ -90,10 +90,11 @@ onMounted(async () => {
 const images = import.meta.glob("../assets/NewsImages/*.{png,jpg,jpeg}", { eager: true });
 
 function getImageSrc(_image?: string, id?: number): string {
-  if (!id) return getFallbackImage();
+  if (!_image) return getFallbackImage();
+
+  if (_image.startsWith("http")) return _image;
 
   const idFilename = `${id}.png`;
-
   for (const path in images) {
     if (path.endsWith("/" + idFilename)) {
       const img = (images as Record<string, any>)[path];
@@ -103,6 +104,7 @@ function getImageSrc(_image?: string, id?: number): string {
 
   return getFallbackImage();
 }
+
 
 function getFallbackImage(): string {
   for (const path in images) {
