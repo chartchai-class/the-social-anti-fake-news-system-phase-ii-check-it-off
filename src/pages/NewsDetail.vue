@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import axios from "axios";
+import { useNewsStore } from "@/stores/newsStore";
+// import axios from "axios";
 
 import AuthorIcon from "@/assets/Card/User.png";
 import DateIcon from "@/assets/Card/Date.png";
@@ -37,6 +38,8 @@ const route = useRoute();
 const router = useRouter();
 const newsId = Number(route.params.id);
 
+const newsStore = useNewsStore();
+
 const isLoading = ref(true);
 const news = ref<NewsItem>({
   id: 0,
@@ -53,13 +56,14 @@ const news = ref<NewsItem>({
 });
 
 onMounted(async () => {
+  // เริ่มโหลด
   isLoading.value = true;
+
   try {
-    const res = await axios.get(`http://localhost:8080/api/news/${newsId}`);
+    await newsStore.fetchNewsById(newsId);
 
-    if (res.status === 200 && res.data) {
-      const data = res.data;
-
+    if (newsStore.currentNews) {
+      const data = newsStore.currentNews;
       news.value = {
         id: data.id,
         title: data.title || "Untitled News",
@@ -80,12 +84,13 @@ onMounted(async () => {
       news.value.title = "News not found";
     }
   } catch (err) {
-    console.error("❌ Error fetching news:", err);
+    console.error("❌ Error fetching news from store:", err);
     news.value.title = "Error loading news";
   } finally {
     isLoading.value = false;
   }
 });
+
 
 const images = import.meta.glob("../assets/NewsImages/*.{png,jpg,jpeg}", { eager: true });
 

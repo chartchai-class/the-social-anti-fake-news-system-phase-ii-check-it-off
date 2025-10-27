@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
-import axios from "axios";
+import { useNewsStore } from "@/stores/newsStore";
+// import axios from "axios";
 
 import LikeIcon from "@/assets/Card/Like.png";
 import DislikeIcon from "@/assets/Card/Dislike.png";
@@ -28,6 +29,8 @@ interface NewsItem {
   downVotes?: number;
 }
 
+const newsStore = useNewsStore();
+
 const route = useRoute();
 const id = Number(route.params.id);
 
@@ -46,23 +49,26 @@ const form = ref({
 
 async function fetchNewsById() {
   try {
-    const res = await axios.get(`http://localhost:8080/api/news/${id}`);
-    if (res.status !== 200) throw new Error("Failed to fetch news");
+    await newsStore.fetchNewsById(id);
 
-    const data = res.data;
-    news.value = {
-      id: data.id,
-      title: data.title,
-      category: data.category,
-      author: data.author,
-      date: data.date,
-      image: data.image,
-      description: data.description,
-      upVotes: data.upVotes || 0,
-      downVotes: data.downVotes || 0,
-    };
+    if (newsStore.currentNews) {
+      const data = newsStore.currentNews;
+      news.value = {
+        id: data.id,
+        title: data.title,
+        category: data.category,
+        author: data.author,
+        date: data.date,
+        image: data.image,
+        description: data.description,
+        upVotes: data.upVotes || 0,
+        downVotes: data.downVotes || 0,
+      };
+    } else {
+      news.value = null;
+    }
   } catch (err) {
-    console.error("❌ Error fetching news:", err);
+    console.error(" Error fetching news from store:", err);
     news.value = null;
   } finally {
     isLoading.value = false;
@@ -92,23 +98,21 @@ async function submitVote() {
       image_url: form.value.imageUrl || null,
     };
 
-    const res = await axios.post(
-      "http://localhost:8080/api/votes",
-      votePayload
-    );
+    await newsStore.submitVote(votePayload);
 
-    if (res.status === 200 || res.status === 201) {
-      alert("🌟 Thank you! Your vote has been recorded.");
+    alert("🌟 Thank you! Your vote has been recorded.");
 
-      await fetchNewsById();
-
-      form.value = { vote: "", comment: "", imageUrl: "" };
-    } else {
-      alert("❌ Failed to save your vote.");
+    if (newsStore.currentNews) {
+      news.value = {
+        ...newsStore.currentNews,
+        upVotes: newsStore.currentNews.upVotes,
+        downVotes: newsStore.currentNews.downVotes,
+      };
     }
+
+    form.value = { vote: "", comment: "", imageUrl: "" };
   } catch (err) {
-    console.error("Error submitting vote:", err);
-    alert("An error occurred while submitting your vote.");
+    alert("Failed to submit your vote.");
   } finally {
     isSubmitting.value = false;
   }
