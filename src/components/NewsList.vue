@@ -12,6 +12,8 @@ const emit = defineEmits(["loaded"]);
 
 const router = useRouter();
 
+const showBackToTop = ref(false);
+
 function goToDetail(id: number) {
   window.scrollTo({ top: 0, behavior: "smooth" });
   router.push({ name: "NewsDetail", params: { id } });
@@ -84,7 +86,6 @@ onMounted(async () => {
   }
 });
 
-
 const filteredNews = computed(() => {
   if (props.filterIndex === 0 || props.filterIndex === null)
     return newsList.value;
@@ -97,6 +98,7 @@ watch(
   () => props.itemsPerPage,
   (newVal) => {
     visibleItems.value = newVal;
+    currentPage.value = 1;
   }
 );
 
@@ -151,6 +153,14 @@ function prevPage() {
     currentPage.value--;
   }
 }
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+window.addEventListener("scroll", () => {
+  showBackToTop.value = window.scrollY > 500;
+});
 </script>
 
 <template>
@@ -312,6 +322,19 @@ function prevPage() {
         Next →
       </button>
     </div>
+
+    <!-- Back to Top Button -->
+    <button
+      v-if="showBackToTop"
+      @click="scrollToTop"
+      class="fixed bottom-6 right-6 w-12 h-12 bg-blue-700 rounded-full flex items-center justify-center shadow-lg cursor-pointer z-50 hover:bg-blue-800 transition-colors duration-300"
+    >
+      <img
+        src="@/assets/Detail/back-to-top.png"
+        alt="Back to Top"
+        class="w-6 h-6"
+      />
+    </button>
   </div>
 </template>
 

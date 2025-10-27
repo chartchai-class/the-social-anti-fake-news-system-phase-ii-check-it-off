@@ -83,7 +83,7 @@ function handleSaveNews(newItem: NewsItem) {
     description: newItem.description,
     category: "Under Review",
   });
-  console.log("✅ New News Added:", newItem);
+  console.log("🌟 New News Added:", newItem);
 }
 
 onMounted(() => {
