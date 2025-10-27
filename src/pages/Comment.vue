@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
-import axios from "axios";
+import { useNewsStore } from "@/stores/newsStore";
 
 import LikeIcon from "@/assets/Card/Like.png";
 import DislikeIcon from "@/assets/Card/Dislike.png";
@@ -9,22 +9,6 @@ import CommentIcon from "@/assets/Card/Comment.png";
 
 import AsideMenu from "@/components/AsideMenu.vue";
 import AddNewsModal from "@/components/AddNewsModal.vue";
-
-interface NewsItem {
-  id: number;
-  title: string;
-  upVotes: number;
-  downVotes: number;
-  commentsCount: number;
-}
-
-interface CommentItem {
-  id: number;
-  name: string;
-  vote: string;
-  comment: string;
-  imageUrl?: string;
-}
 
 interface User {
   name: string;
@@ -35,34 +19,16 @@ interface User {
 
 const route = useRoute();
 const id = Number(route.params.id);
+const newsStore = useNewsStore();
 
 const isLoading = ref(true);
 const isLoadingComments = ref(true);
-
-const news = ref<NewsItem>({
-  id,
-  title: "Loading...",
-  upVotes: 0,
-  downVotes: 0,
-  commentsCount: 0,
-});
-
-const comments = ref<CommentItem[]>([]);
 const user = ref<User | null>(null);
 
 async function fetchNews() {
   try {
-    const res = await axios.get(`http://localhost:8080/api/news/${id}`);
-    if (res.status === 200 && res.data) {
-      const data = res.data;
-      news.value = {
-        id: data.id,
-        title: data.title,
-        upVotes: data.upVotes || 0,
-        downVotes: data.downVotes || 0,
-        commentsCount: data.commentsCount || 0,
-      };
-    }
+    isLoading.value = true;
+    await newsStore.fetchNewsById(id);
   } catch (err) {
     console.error("Error fetching news:", err);
   } finally {
@@ -72,18 +38,8 @@ async function fetchNews() {
 
 async function fetchComments() {
   try {
-    const res = await axios.get(
-      `http://localhost:8080/api/votes/news/${id}`
-    );
-    if (res.status === 200 && Array.isArray(res.data)) {
-      comments.value = res.data.map((c: any) => ({
-        id: c.id,
-        name: c.name,
-        vote: c.vote,
-        comment: c.comment,
-        imageUrl: c.imageUrl || null,
-      }));
-    }
+    isLoadingComments.value = true;
+    await newsStore.fetchCommentsByNewsId(id);
   } catch (err) {
     console.error("Error fetching comments:", err);
   } finally {
@@ -97,24 +53,19 @@ onMounted(async () => {
 
 onMounted(() => {
   const savedUser = localStorage.getItem("user");
-  if (savedUser) {
-    user.value = JSON.parse(savedUser);
-  }
+  if (savedUser) user.value = JSON.parse(savedUser);
 });
 
 const showAddNewsModal = ref(false);
-
 function openAddNewsModal() {
   showAddNewsModal.value = true;
 }
-
 function closeAddNewsModal() {
   showAddNewsModal.value = false;
 }
-
 function handleSaveNews(newItem: any) {
   console.log("New News Added (from Comment Page):", newItem);
-  alert(" News added successfully!");
+  alert("News added successfully!");
   closeAddNewsModal();
 }
 </script>
@@ -141,27 +92,29 @@ function handleSaveNews(newItem: any) {
 
       <!-- News Stats -->
       <div
+        v-if="newsStore.currentNews"
         class="mt-4 bg-white rounded-xl border border-gray-200 shadow-md px-6 py-5 flex justify-between items-center w-full h-[130px]"
       >
         <div class="flex flex-col gap-2">
           <h2 class="font-bold text-[24px] text-[#111827]">
-            {{ news.title }}
+            {{ newsStore.currentNews.title }}
           </h2>
           <div class="flex gap-6 text-[18px]">
             <div class="flex items-center gap-2">
               <img :src="LikeIcon" alt="Like" class="w-7 h-7" />
-              <span>{{ news.upVotes }} Up Votes</span>
+              <span>{{ newsStore.currentNews.upVotes || 0 }} Up Votes</span>
             </div>
             <div class="flex items-center gap-2">
               <img :src="DislikeIcon" alt="Dislike" class="w-7 h-7" />
-              <span>{{ news.downVotes }} Down Votes</span>
+              <span>{{ newsStore.currentNews.downVotes || 0 }} Down Votes</span>
             </div>
             <div class="flex items-center gap-2">
               <img :src="CommentIcon" alt="Comment" class="w-7 h-7" />
-              <span>{{ news.commentsCount }} Total Comments</span>
+              <span>{{ newsStore.comments.length }} Total Comments</span>
             </div>
           </div>
         </div>
+
         <router-link
           :to="{ name: 'Vote', params: { id } }"
           class="bg-blue-500 text-white rounded-md px-5 py-2.5 text-[15px] font-medium cursor-pointer transition-all duration-300 hover:bg-blue-600"
@@ -181,7 +134,7 @@ function handleSaveNews(newItem: any) {
         </div>
 
         <div
-          v-else-if="comments.length === 0"
+          v-else-if="newsStore.comments.length === 0"
           class="text-center text-[#666] italic mt-3"
         >
           No comments yet.
@@ -189,7 +142,7 @@ function handleSaveNews(newItem: any) {
 
         <div v-else>
           <div
-            v-for="c in comments"
+            v-for="c in newsStore.comments"
             :key="c.id"
             class="flex flex-col text-left gap-3 bg-white rounded-xl py-5 px-5 border-b border-gray-200 -ml-5"
           >
