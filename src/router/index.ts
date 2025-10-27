@@ -36,6 +36,12 @@ const routes = [
     name: "UserManage",
     component: UserManage,
   },
+  {
+  path: "/search",
+  name: "Search",
+  component: () => import("@/pages/SearchPage.vue"),
+},
+
 ];
 
 export default createRouter({
