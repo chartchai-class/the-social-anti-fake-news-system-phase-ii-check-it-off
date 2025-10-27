@@ -80,6 +80,9 @@
                 <td class="px-6 py-3">{{ news.id }}</td>
                 <td class="px-6 py-3 font-semibold text-blue-600">
                   {{ news.title }}
+                  <span class="text-gray-500 text-sm ml-4">
+                    (#{{ news.commentsCount }})
+                  </span>
                 </td>
 
                 <!-- Category -->
@@ -272,6 +275,7 @@ interface NewsItem {
   id: number;
   title: string;
   category: string;
+  commentsCount?: number;
 }
 
 interface CommentItem {
