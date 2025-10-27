@@ -114,13 +114,13 @@ const direction = ref<"left" | "right">("left");
 const previousPage = ref(1);
 
 const totalPages = computed(() =>
-  Math.ceil(filteredNews.value.length / props.itemsPerPage)
+  Math.ceil(searchedNews.value.length / props.itemsPerPage)
 );
 
 const paginatedNews = computed(() => {
   const start = (currentPage.value - 1) * props.itemsPerPage;
   const end = start + props.itemsPerPage;
-  return filteredNews.value.slice(start, end);
+  return searchedNews.value.slice(start, end);
 });
 
 watch(
@@ -161,12 +161,40 @@ function scrollToTop() {
 window.addEventListener("scroll", () => {
   showBackToTop.value = window.scrollY > 500;
 });
+
+const searchQuery = ref("");
+
+const searchedNews = computed(() => {
+  const query = searchQuery.value.toLowerCase().trim();
+  let list = filteredNews.value;
+
+  if (query) {
+  list = list.filter(
+    (n) =>
+      n.title.toLowerCase().includes(query) ||
+      (n.author && n.author.toLowerCase().includes(query)) ||
+      (n.category && n.category.toLowerCase().includes(query)) ||
+      (n.description && n.description.toLowerCase().includes(query))
+  );
+}
+  return list;
+});
 </script>
 
 <template>
   <div
     class="relative ml-[50px] w-[calc(125%-50px)] -left-[12.5%] font-[Outfit] py-4 px-8 box-border"
   >
+    <!-- Search Bar -->
+    <div class="flex justify-start mb-6">
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Search news by title, author, or category..."
+        class="w-[330px] h-[40px] px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-700"
+      />
+    </div>
+
     <div
       v-if="loading"
       class="grid justify-center gap-6 grid-cols-3 md:grid-cols-3 sm:grid-cols-1 animate-pulse"
