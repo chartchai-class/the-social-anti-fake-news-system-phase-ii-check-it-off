@@ -35,6 +35,7 @@ interface Props {
     commentsCount?: number;
     fullDescription?: string;
   }>;
+  hideSearchButton?: boolean;
 }
 const props = defineProps<Props>();
 
@@ -194,6 +195,7 @@ const searchedNews = computed(() => {
         class="w-[330px] h-[40px] px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-700"
       />
       <button
+        v-if="!props.hideSearchButton"
         @click="$router.push('/search')"
         class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition ml-[5px]"
       >
