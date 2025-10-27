@@ -169,14 +169,14 @@ const searchedNews = computed(() => {
   let list = filteredNews.value;
 
   if (query) {
-  list = list.filter(
-    (n) =>
-      n.title.toLowerCase().includes(query) ||
-      (n.author && n.author.toLowerCase().includes(query)) ||
-      (n.category && n.category.toLowerCase().includes(query)) ||
-      (n.description && n.description.toLowerCase().includes(query))
-  );
-}
+    list = list.filter(
+      (n) =>
+        n.title.toLowerCase().includes(query) ||
+        (n.author && n.author.toLowerCase().includes(query)) ||
+        (n.category && n.category.toLowerCase().includes(query)) ||
+        (n.description && n.description.toLowerCase().includes(query))
+    );
+  }
   return list;
 });
 </script>
@@ -193,6 +193,12 @@ const searchedNews = computed(() => {
         placeholder="Search news by title, author, or category..."
         class="w-[330px] h-[40px] px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-700"
       />
+      <button
+        @click="$router.push('/search')"
+        class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition ml-[5px]"
+      >
+        Search News
+      </button>
     </div>
 
     <div

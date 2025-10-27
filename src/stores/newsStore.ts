@@ -46,7 +46,8 @@ export const useNewsStore = defineStore("newsStore", {
 
         if (res.status === 200 || res.status === 201) {
           console.log("🌟 Vote submitted successfully.");
-          if (votePayload.news_id) await this.fetchNewsById(votePayload.news_id);
+          if (votePayload.news_id)
+            await this.fetchNewsById(votePayload.news_id);
         } else {
           throw new Error("Vote submission failed");
         }
@@ -59,12 +60,26 @@ export const useNewsStore = defineStore("newsStore", {
     async fetchCommentsByNewsId(newsId: number) {
       this.isLoading = true;
       try {
-        const res = await axios.get(`http://localhost:8080/api/votes/news/${newsId}`);
+        const res = await axios.get(
+          `http://localhost:8080/api/votes/news/${newsId}`
+        );
         this.comments = Array.isArray(res.data) ? res.data : [];
       } catch (err) {
         console.error("Failed to fetch comments:", err);
       } finally {
         this.isLoading = false;
+      }
+    },
+
+    async searchNews(query: string) {
+      try {
+        const res = await axios.get(`http://localhost:8080/api/news/search`, {
+          params: { q: query },
+        });
+        return res.data;
+      } catch (err) {
+        console.error("Failed to search news:", err);
+        return [];
       }
     },
   },
