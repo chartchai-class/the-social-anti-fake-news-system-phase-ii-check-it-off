@@ -64,24 +64,30 @@ const stats = ref<Stat[]>([
 
 onMounted(async () => {
   try {
-    const res = await fetch("http://localhost:8080/api/news/stats");
+    const res = await fetch("http://localhost:8080/api/news");
     const data = await res.json();
 
-    const fetchedStats = data.stats ?? {
-      total: 0,
-      verified: 0,
-      fake: 0,
-      unverified: 0,
-    };
+    const visibleNews = Array.isArray(data)
+      ? data.filter((n) => n.visible === true)
+      : [];
+
+    const total = visibleNews.length;
+    const verified = visibleNews.filter((n) => n.category === "Verified").length;
+    const fake = visibleNews.filter((n) => n.category === "Fake News").length;
+    const unverified = visibleNews.filter(
+      (n) =>
+        n.category === "Under Review" || n.category === "Unverified"
+    ).length;
 
     stats.value = [
-      { ...stats.value[0], value: Number(fetchedStats.total) } as Stat,
-      { ...stats.value[1], value: Number(fetchedStats.verified) } as Stat,
-      { ...stats.value[2], value: Number(fetchedStats.fake) } as Stat,
-      { ...stats.value[3], value: Number(fetchedStats.unverified) } as Stat,
+      { ...stats.value[0], value: total } as Stat,
+      { ...stats.value[1], value: verified } as Stat,
+      { ...stats.value[2], value: fake } as Stat,
+      { ...stats.value[3], value: unverified } as Stat,
     ];
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error fetching news stats:", err);
   }
 });
+
 </script>
