@@ -23,7 +23,13 @@ dist-ssr/
 .env
 .env.*
 secret/
+
+# Ignore all JSONs except package files
 *.json
+!package.json
+!package-lock.json
+!frontend/package.json
+!frontend/package-lock.json
 
 # ==========================
 # Optional local server files
@@ -49,6 +55,5 @@ secret/
 # ==========================
 # Ignore MySQL data volume to prevent tracking binary/database files
 src/checkitoff-db/mysql_data/
-
 frontend/src/checkitoff-db/mysql_data/
 frontend/src/checkitoff-db/
