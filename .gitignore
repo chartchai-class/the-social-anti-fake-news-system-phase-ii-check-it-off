@@ -49,3 +49,6 @@ secret/
 # ==========================
 # Ignore MySQL data volume to prevent tracking binary/database files
 src/checkitoff-db/mysql_data/
+
+frontend/src/checkitoff-db/mysql_data/
+frontend/src/checkitoff-db/
