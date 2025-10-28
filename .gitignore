@@ -57,3 +57,9 @@ secret/
 src/checkitoff-db/mysql_data/
 frontend/src/checkitoff-db/mysql_data/
 frontend/src/checkitoff-db/
+
+# Allow TypeScript configs inside frontend
+!frontend/tsconfig.app.json
+!frontend/tsconfig.json
+!frontend/tsconfig.node.json
+
