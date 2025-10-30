@@ -2,8 +2,6 @@
 import { defineStore } from "pinia";
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
-
 export const useNewsStore = defineStore("newsStore", {
   state: () => ({
     newsList: [] as any[],
@@ -16,7 +14,7 @@ export const useNewsStore = defineStore("newsStore", {
     async fetchAllNews() {
       this.isLoading = true;
       try {
-        const res = await axios.get(`${API_BASE}/api/news`);
+        const res = await axios.get("http://localhost:8080/api/news");
         this.newsList = res.data;
       } catch (err) {
         console.error("Failed to fetch all news:", err);
@@ -30,7 +28,7 @@ export const useNewsStore = defineStore("newsStore", {
 
       this.isLoading = true;
       try {
-        const res = await axios.get(`${API_BASE}/api/news/${id}`);
+        const res = await axios.get(`http://localhost:8080/api/news/${id}`);
         this.currentNews = res.data;
       } catch (err) {
         console.error("Failed to fetch news detail:", err);
@@ -41,7 +39,10 @@ export const useNewsStore = defineStore("newsStore", {
 
     async submitVote(votePayload: any) {
       try {
-        const res = await axios.post(`${API_BASE}/api/votes`, votePayload);
+        const res = await axios.post(
+          "http://localhost:8080/api/votes",
+          votePayload
+        );
 
         if (res.status === 200 || res.status === 201) {
           console.log("🌟 Vote submitted successfully.");
@@ -59,7 +60,9 @@ export const useNewsStore = defineStore("newsStore", {
     async fetchCommentsByNewsId(newsId: number) {
       this.isLoading = true;
       try {
-        const res = await axios.get(`${API_BASE}/api/votes/news/${newsId}`);
+        const res = await axios.get(
+          `http://localhost:8080/api/votes/news/${newsId}`
+        );
         this.comments = Array.isArray(res.data) ? res.data : [];
       } catch (err) {
         console.error("Failed to fetch comments:", err);
@@ -70,7 +73,7 @@ export const useNewsStore = defineStore("newsStore", {
 
     async searchNews(query: string) {
       try {
-        const res = await axios.get(`${API_BASE}/api/news/search`, {
+        const res = await axios.get(`http://localhost:8080/api/news/search`, {
           params: { q: query },
         });
         return res.data;

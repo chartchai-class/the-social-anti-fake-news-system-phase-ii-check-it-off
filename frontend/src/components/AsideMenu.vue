@@ -1,24 +1,38 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import axios from "axios";
 
-const user = ref<{ name: string; surname?: string; access?: string } | null>(
-  null
-);
+const user = ref<{
+  name: string;
+  surname?: string;
+  access?: string;
+  email?: string;
+} | null>(null);
+
 const router = useRouter();
 
 onMounted(async () => {
   const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
   if (storedUser?.email) {
-    const res = await fetch(
-      `http://localhost/checkitoff/api/get_user.php?email=${storedUser.email}`
-    );
-    const data = await res.json();
-    if (data.success) {
-      user.value = data.user;
-      console.log("Loaded user:", user.value);
-    } else {
-      console.error("Error fetching user:", data.message);
+    try {
+      const res = await axios.get("http://localhost:8080/api/users");
+      const foundUser = res.data.find(
+        (u: any) => u.email === storedUser.email
+      );
+      if (foundUser) {
+        user.value = {
+          name: foundUser.name,
+          surname: foundUser.surname,
+          access: foundUser.role,
+          email: foundUser.email
+        };
+        console.log("Loaded user:", user.value);
+      } else {
+        console.warn("User not found in backend");
+      }
+    } catch (err) {
+      console.error("Failed to fetch user:", err);
     }
   }
 });
