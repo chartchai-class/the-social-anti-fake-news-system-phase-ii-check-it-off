@@ -37,6 +37,8 @@ secret/*.json  # ignore ของลับ
 
 .vite/
 
+checkitoff-db/mysql_data/
+
 # Docker & MySQL
 src/checkitoff-db/mysql_data/
 frontend/src/checkitoff-db/mysql_data/
