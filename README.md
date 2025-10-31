@@ -1,7 +1,7 @@
 ## Term Project
 The Term Project SE331 Component-Based Software Development 2<br>
 **project-01-the-anti-fake-news-system-check-it-off Phase II** <br>
-**Deployment New Version Vue :** [View on Verce New Version Vue.js](https://project-01-the-anti-fake-news-system-check-it-off-8akrmm5yg.vercel.app) <br>
+**Deployment New Version Vue :** [(https://project-01-the-anti-fake-news-system-check-it-off-8akrmm5yg.vercel.app)](https://the-social-anti-fake-news-system-ph.vercel.app/) <br>
 **Old Version (Reference) :** [View on Vercel Old Version Next.js](https://project-01-the-anti-fake-news-syste-eight.vercel.app/)
 
 ---
